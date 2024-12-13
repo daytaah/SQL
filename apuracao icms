@@ -1,0 +1,70 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="P_CODEMP" description="Empresa" metadata="singleList:Text" listType="sql" required="true" keep-last="false" keep-date="false" order="0">
+      <expression type="SQL"><![CDATA[SELECT CODEMP AS VALUE, NOMEFANTASIA AS LABEL  FROM TSIEMPWHERE CODEMP >= 100 ]]></expression>
+    </parameter>
+    <parameter id="P_DT" description="Período" metadata="datePeriod" required="true" keep-last="true" keep-date="false" order="1"/>
+    <parameter id="P_NOP" description="Natureza da Operação" metadata="singleList:Text" listType="text" required="false" keep-last="false" keep-date="false" order="2">
+      <item value="E" label=" Entrada"/>
+      <item value="S" label=" Saída"/>
+    </parameter>
+  </prompt-parameters>
+  <level id="lvl_ph5jfp" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="100">
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_ph5jf2">
+            <value-expression><![CDATA[<div style='text-align: center;'><td width=25%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_ph5jf3">
+            <value-expression><![CDATA[<br><br><div style='text-align: center;'><span style='font-size: 25px; color: #4D3522;'>Apuração ICMS anual</span></div></br></br>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_ph5jf4">
+            <value-expression><![CDATA[<br><div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div></br>]]></value-expression>
+          </simple-value>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="354">
+        <container orientacao="V" tamanhoRelativo="50">
+          <grid id="grd_ph5jhw" useNewGrid="S">
+            <expression type="sql" data-source="MGEDS"><![CDATA[SELECT    CODEMP, (CASE WHEN CODCFO <=4000 THEN 'ENTRADA'WHEN CODCFO >=4000 THEN 'SAÍDA'END) AS 'SENTIDO' , CODCFO, SUM(BASEICMS) AS BASEICMS , SUM(VLRICMS) AS VLRICMSTOT, SUM(VLRCTB) AS VLRCTB , SUM(TGFLIV.ISENTASICMS) AS ISENTASICMS, SUM(TGFLIV.OUTRASICMS) AS OUTRASICMSFROM TGFLIVWHERE CODEMP = :P_CODEMPAND DHMOV BETWEEN :P_DT.INI AND :P_DT.FINAND ((:P_NOP = 'E' AND CODCFO <= 4000)OR (:P_NOP = 'S' AND CODCFO >= 4000))GROUP BY CODEMP,CODCFOORDER BY CODCFO ]]></expression>
+            <metadata>
+              <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+              <field name="SENTIDO" label="Natureza Operação" type="S" visible="true" useFooter="false"/>
+              <field name="CODCFO" label="CFOP" type="I" visible="true" useFooter="false"/>
+              <field name="BASEICMS" label="Base ICMS" type="F" visible="true" useFooter="false"/>
+              <field name="VLRICMSTOT" label="Valor ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+              <field name="VLRCTB" label="Valor  Contábil" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+              <field name="ISENTASICMS" label="Isentas ICMS" type="F" visible="true" useFooter="false"/>
+              <field name="OUTRASICMS" label="Outras ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+            </metadata>
+            <refresh-details ui-list="grd_qk1vbe">
+              <param id="A_CODCFO">$CODCFO</param>
+            </refresh-details>
+          </grid>
+        </container>
+        <container orientacao="V" tamanhoRelativo="50">
+          <grid id="grd_qk1vbe" useNewGrid="S">
+            <args>
+              <arg id="A_CODCFO" type="integer"/>
+            </args>
+            <expression type="sql" data-source="MGEDS"><![CDATA[SELECT        TGFLIV.UFORIGEM     , TGFLIV.UFDESTINO     , SUM(TGFLIV.BASEICMS) AS BASEICMS     , SUM(TGFLIV.ISENTASICMS) AS ISENTASICMS     , SUM(TGFLIV.OUTRASICMS) AS OUTRASICMS     , SUM(TGFLIV.VLRCTB) AS VLRCTB     , SUM(TGFLIV.VLRICMS)AS VLRICMSFROM TGFLIVINNER JOIN TGFCFO ON TGFCFO.CODCFO = TGFLIV.CODCFO WHERE TGFLIV.CODEMP = :P_CODEMP AND TGFLIV.DHMOV BETWEEN :P_DT.INI AND :P_DT.FINAND ((:P_NOP = 'E' AND TGFLIV.CODCFO <= 4000)OR (:P_NOP = 'S' AND TGFLIV.CODCFO >= 4000))AND TGFLIV.CODCFO = :A_CODCFOGROUP BY  TGFLIV.UFORIGEM,         TGFLIV.UFDESTINO]]></expression>
+            <metadata>
+              <field name="UFORIGEM" label="UF Origem" type="S" visible="true" useFooter="false"/>
+              <field name="UFDESTINO" label="UF Destino" type="S" visible="true" useFooter="false"/>
+              <field name="BASEICMS" label="Base ICMS" type="F" visible="true" useFooter="false"/>
+              <field name="ISENTASICMS" label="Isentas ICMS" type="F" visible="true" useFooter="false"/>
+              <field name="OUTRASICMS" label="Outras ICMS" type="F" visible="true" useFooter="false"/>
+              <field name="VLRCTB" label="Valor Contábil" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+              <field name="VLRICMS" label="Valor ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+            </metadata>
+          </grid>
+        </container>
+      </container>
+    </container>
+  </level>
+</gadget>

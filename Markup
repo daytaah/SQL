@@ -1,0 +1,71 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="DT" description="Data faturamento" metadata="datePeriod" required="true" keep-last="true" keep-date="false" order="0"/>
+  </prompt-parameters>
+  <level id="lvl_a6sca6m" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="100">
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_a6sca6o">
+            <value-expression><![CDATA[<div style='text-align: center;'><td width=25%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_a6sca6p">
+            <value-expression><![CDATA[<br><br><div style='text-align: center;'><span style='font-size: 38px; color: #4D3522;'>Markup</span></div></br></br>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_a6sca6q">
+            <value-expression><![CDATA[<br><div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div></br>]]></value-expression>
+          </simple-value>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="324">
+        <grid id="grd_a6sca6n" useNewGrid="S">
+          <expression type="sql" data-source="MGEDS"><![CDATA[WITHPRODUTOS AS (SELECT CODPROD,                         DESCRPROD,                         REFERENCIA,                         AD_CODIGOSGA             AS CODIGOSGA,                         FORMAT(AD_CODCOR, '000') AS CODCOR,				   CODGRUPOPROD		     AS CODGRUPOPROD                  FROM TGFPRO                  WHERE USOPROD = 'R'                    AND ATIVO = 'S'                    AND (ISNULL(AD_CODIGOSGA, REFERENCIA) LIKE :REFERENCIA + '%' OR :REFERENCIA IS NULL)                    AND (TGFPRO.AD_CODCOLECAO = :CODCOLECAO OR :CODCOLECAO IS NULL)                    AND (TGFPRO.CODPROD = :CODPROD OR :CODPROD IS NULL)                    AND (EXISTS(SELECT * FROM AD_TGFMIXPRO WHERE AD_TGFMIXPRO.CODPROD = TGFPRO.CODPROD AND AD_TGFMIXPRO.CODMIX = :CODMIX) OR :CODMIX IS NULL)),     PRECOTAB AS (SELECT TGFTAB.CODTAB,                         TGFEXC.CODPROD,                         TGFEXC.VLRVENDA                  FROM TGFTAB                           INNER JOIN TGFEXC ON TGFEXC.NUTAB = TGFTAB.NUTAB                  WHERE 1=1                     AND TGFTAB.DTVIGOR <= CONVERT(DATE, GETDATE())                    AND TGFTAB.DTVIGOR = (SELECT MAX(TAB.DTVIGOR)                                          FROM TGFTAB TAB                                                   INNER JOIN TGFEXC EXC ON EXC.NUTAB = TAB.NUTAB                                          WHERE EXC.CODPROD = TGFEXC.CODPROD                                            AND TAB.CODTAB = TGFTAB.CODTAB)                    AND TGFEXC.CODPROD IN (SELECT CODPROD FROM PRODUTOS)),PRECOTABCLIENTE AS (SELECT CODPROD, VLRVENDA FROM PRECOTAB WHERE CODTAB = 104),BASE AS (SELECT TGFPRO.CODPROD     , AD_TGFPARMKP.MARKUP AS MKPCDESPERADO     , AD_TGFLOJA.CODLOJA      , TGFCAB.NUMNOTA     , TGFCAB.NUNOTA     , TGFPAR.NOMEPARC      , TGFPRO.REFERENCIA      , TGFTPP.DESCRTIPPARC AS PERFIL     , GRUPO3.DESCRGRUPOPROD AS CATEGORIA     , GRUPO3.CODGRUPOPROD AS GRUPO     , PRECOTABCLIENTE.VLRVENDA AS PRECOFINAL     , TGFITE.VLRUNIT AS VLRUNIT     , AD_TGFPARMKP.FATOR AS MKPLOJAESPERADO     , (SELECT MAX(PEDIDO.DTNEG)FROM TGFCAB NFE LEFT JOIN TGFVAR ON TGFVAR.NUNOTA = NFE.NUNOTA LEFT JOIN TGFCAB PEDIDO ON TGFVAR.NUNOTAORIG = PEDIDO.NUNOTA WHERE NFE.NUNOTA = TGFCAB.NUNOTA ) AS DATAPEDIDO     , TGFCAB.DTFATUR AS DATAFATURAMENTO     , (SELECT MIN(TGFTAB.DTVIGOR) FROM TGFEXC (NOLOCK) INNER JOIN TGFTAB (NOLOCK) ON TGFTAB.NUTAB = TGFEXC.NUTAB WHERE TGFEXC.CODPROD = TGFPRO.CODPROD AND TGFTAB.CODTAB = 103 AND SANKHYA.SNK_PRECO(103,TGFEXC.CODPROD) = TGFEXC.VLRVENDA AND ISNULL(TGFEXC.AD_PRECOEXE,'N')<>'S') AS DATAREPRECIFICACAO     , (SELECT EXC.VLRVENDA 		   FROM TGFEXC EXC (NOLOCK), TGFTAB TAB(NOLOCK)	      WHERE EXC.NUTAB = TAB.NUTAB AND EXC.CODPROD = TGFITE.CODPROD AND TAB.CODTAB = 102		    AND TAB.DTVIGOR = (SELECT MAX(TAB1.DTVIGOR) FROM TGFTAB TAB1 (NOLOCK), TGFEXC EXC1		  WHERE TAB1.CODTAB = 102 			AND EXC1.CODPROD = TGFITE.CODPROD 			AND TAB1.NUTAB = EXC1.NUTAB AND TAB1.DTVIGOR <= TGFCAB.DTENTSAI )) AS CUSTOREP     , (SELECT AD_TGFPARMKP.MARKUP          FROM AD_TGFPARMKP (NOLOCK)           WHERE AD_TGFPARMKP.CODTAB = 104 AND AD_TGFPARMKP.CODGRUPOPROD = CASE WHEN AD_TGFPARMKP.CODGRUPOPROD = 60100000 THEN GRUPO2.CODGRUPOPROD WHEN GRUPO3.CODGRUPOPROD = 60301000 THEN GRUPO2.CODGRUPOPROD WHEN GRUPO3.CODGRUPOPROD = 60302000 THEN GRUPO2.CODGRUPOPROD WHEN GRUPO3.CODGRUPOPROD = 60303000 THEN GRUPO2.CODGRUPOPROD ELSE GRUPO3.CODGRUPOPROD END ) AS MKPGERALESPERADO     , ROUND(PRECOTABCLIENTE.VLRVENDA/TGFITE.VLRUNIT,2) AS MKPLOJA      FROM TGFPRO (NOLOCK)INNER JOIN PRECOTABCLIENTE ON PRECOTABCLIENTE.CODPROD = TGFPRO.CODPROD INNER JOIN TGFGRU (NOLOCK) ON TGFGRU.CODGRUPOPROD = TGFPRO.CODGRUPOPRODINNER JOIN TGFGRU GRUPO3 (NOLOCK) ON GRUPO3.CODGRUPOPROD = TGFGRU.CODGRUPAIINNER JOIN TGFGRU GRUPO2 (NOLOCK) ON GRUPO2.CODGRUPOPROD = GRUPO3.CODGRUPAIINNER JOIN AD_TGFPARMKP (NOLOCK) ON AD_TGFPARMKP.CODGRUPOPROD = CASE WHEN AD_TGFPARMKP.CODGRUPOPROD = 60100000 THEN GRUPO2.CODGRUPOPROD WHEN AD_TGFPARMKP.CODGRUPOPROD = 60300000 THEN GRUPO2.CODGRUPOPROD ELSE GRUPO3.CODGRUPOPROD END LEFT JOIN TGFITE (NOLOCK) ON TGFITE.CODPROD = TGFPRO.CODPROD INNER JOIN TGFCAB (NOLOCK) ON TGFCAB.NUNOTA = TGFITE.NUNOTA INNER JOIN TGFPAR (NOLOCK) ON TGFPAR.CODPARC = TGFCAB.CODPARCINNER JOIN TGFTPP (NOLOCK) ON TGFTPP.CODTIPPARC = TGFPAR.CODTIPPARC INNER JOIN AD_TGFLOJA (NOLOCK) ON AD_TGFLOJA.CODPARC = TGFPAR.CODPARC INNER JOIN AD_TGFTPPTAB (NOLOCK) ON AD_TGFTPPTAB.CODTIPPARC = TGFPAR.CODTIPPARC AND TGFCAB.CODEMP = AD_TGFTPPTAB.CODEMP AND AD_TGFPARMKP.CODTAB = AD_TGFTPPTAB.CODTAB LEFT JOIN TGFEXC (NOLOCK) ON TGFEXC.CODPROD = TGFPRO.CODPROD AND TGFEXC.NUTAB = AD_TGFPARMKP.CODTAB AND TGFEXC.NUTAB = AD_TGFTPPTAB.CODTABWHERE TGFCAB.CODTIPOPER = 3200AND CONVERT(DATE,TGFCAB.DTFATUR,103) BETWEEN :DT.INI AND :DT.FIN)SELECT ROUND(VLRUNIT/CUSTOREP,2) AS DIF     , ROUND(VLRUNIT/CUSTOREP,2) AS MKPCD     , ROUND(CASE WHEN CUSTOREP = 0 THEN 0 ELSE (PRECOFINAL / CUSTOREP) END,2) AS MKPGERAL     , CASE WHEN ROUND(VLRUNIT/CUSTOREP,2) < MKPCDESPERADO THEN 'FALSO'               WHEN ROUND(VLRUNIT/CUSTOREP,2) >= MKPCDESPERADO THEN 'VERDADEIRO'               WHEN (ROUND(VLRUNIT/CUSTOREP,2)*1.5 > MKPCDESPERADO) THEN 'ACIMA'               ELSE 'INVALIDO' END AS VALIDACAO     , CASE WHEN ROUND(VLRUNIT/CUSTOREP,2) >= 1.19 THEN 'VERDADEIRO'               WHEN ROUND(VLRUNIT/CUSTOREP,2) < 1.19 THEN 'FALSO'                END AS VALIDARDIF     , CASE WHEN ROUND(VLRUNIT/CUSTOREP,2) >= MKPCDESPERADO THEN '0' ELSE '1' END AS FAROLCD      , CASE WHEN MKPLOJA >= MKPLOJAESPERADO THEN '0' ELSE '1' END AS FAROLLOJA      , CASE WHEN (PRECOFINAL / CUSTOREP) >= MKPGERALESPERADO THEN '0' ELSE '1' END AS FAROLGERAL      , ROUND(PRECOFINAL/MKPLOJAESPERADO,2) AS PRECOVENDACDESPERADO      , CASE WHEN DATAREPRECIFICACAO <= DATAFATURAMENTO AND DATAREPRECIFICACAO >= '28/05/2024' THEN BASE.CODPROD      WHEN BASE.REFERENCIA LIKE '%A56%' OR REFERENCIA LIKE '%T56%' OR REFERENCIA LIKE '%C56%' OR REFERENCIA LIKE '%S56%' THEN BASE.CODPROD      ELSE NULL END AS PRODUTOTESTE      , *FROM BASE OPTION(RECOMPILE)]]></expression>
+          <metadata>
+            <field name="DIF" label="Dif." type="F" visible="true" useFooter="false"/>
+            <field name="MKPCD" label="Markup CD" type="F" visible="true" useFooter="false"/>
+            <field name="MKPGERAL" label="Markup Geral" type="F" visible="true" useFooter="false"/>
+            <field name="VALIDACAO" label="Validação" type="S" visible="true" useFooter="false"/>
+            <field name="VALIDARDIF" label="Validar Dif." type="S" visible="true" useFooter="false"/>
+            <field name="FAROLCD" label="Farol CD" type="I" visible="true" useFooter="false">
+              <formatter equalThan="0"><![CDATA[<span style="; src:iconAccept; somente-icone:S">$VALUE</span>]]></formatter>
+              <formatter equalThan="1"><![CDATA[<span style="; src:iconDeleteCross; somente-icone:S">$VALUE</span>]]></formatter>
+            </field>
+            <field name="FAROLLOJA" label="Farol Loja" type="I" visible="true" useFooter="false">
+              <formatter equalThan="0"><![CDATA[<span style="; src:iconAccept; somente-icone:S">$VALUE</span>]]></formatter>
+              <formatter equalThan="1"><![CDATA[<span style="; src:iconDeleteCross; somente-icone:S">$VALUE</span>]]></formatter>
+            </field>
+            <field name="FAROLGERAL" label="Farol Geral" type="I" visible="true" useFooter="false">
+              <formatter equalThan="0"><![CDATA[<span style="; src:iconAccept; somente-icone:S">$VALUE</span>]]></formatter>
+              <formatter equalThan="1"><![CDATA[<span style="; src:iconDeleteCross; somente-icone:S">$VALUE</span>]]></formatter>
+            </field>
+            <field name="PRECOVENDACDESPERADO" label="Preço Venda CD Esperado" type="I" visible="true" useFooter="false" mask="#.##0,00"/>
+            <field name="PRODUTOTESTE" label="Produto Teste" type="I" visible="true" useFooter="false"/>
+            <field name="CODPROD" label="Produto" type="I" visible="true" useFooter="false"/>
+            <field name="MKPCDESPERADO" label="Markup CD Esperado" type="F" visible="true" useFooter="false"/>
+            <field name="CODLOJA" label="Loja" type="I" visible="true" useFooter="false"/>
+            <field name="NUMNOTA" label="Nº Nota" type="I" visible="true" useFooter="false"/>
+            <field name="NUNOTA" label="NUNOTA" type="I" visible="true" useFooter="false"/>
+            <field name="NOMEPARC" label="Parceiro" type="S" visible="true" useFooter="false"/>
+            <field name="REFERENCIA" label="Referencia" type="S" visible="true" useFooter="false"/>
+            <field name="PERFIL" label="Perfil" type="S" visible="true" useFooter="false"/>
+            <field name="CATEGORIA" label="Categoria" type="S" visible="true" useFooter="false"/>
+            <field name="GRUPO" label="GRUPO" type="I" visible="false" useFooter="false"/>
+            <field name="PRECOFINAL" label="Preço Final" type="I" visible="true" useFooter="false" mask="#.##0,00"/>
+            <field name="VLRUNIT" label="Valor Unitário" type="I" visible="true" useFooter="false" mask="#.##0,00"/>
+            <field name="MKPLOJAESPERADO" label="Markup Loja Esperado" type="F" visible="true" useFooter="false"/>
+            <field name="DATAPEDIDO" label="Data Pedido" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+            <field name="DATAFATURAMENTO" label="Data Faturamento" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+            <field name="DATAREPRECIFICACAO" label="Data Reprecificação" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+            <field name="CUSTOREP" label="Custo Reposição" type="I" visible="true" useFooter="false" mask="#.##0,00"/>
+            <field name="MKPGERALESPERADO" label="Markup Geral Esperado" type="F" visible="true" useFooter="false"/>
+            <field name="MKPLOJA" label="Markup Loja" type="F" visible="true" useFooter="false"/>
+          </metadata>
+        </grid>
+      </container>
+    </container>
+  </level>
+</gadget>

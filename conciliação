@@ -1,0 +1,253 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="DATA" description="Data " metadata="datePeriod" required="true" keep-last="true" keep-date="false" order="0"/>
+    <parameter id="NSUSNK" description="NSU (SNK)" metadata="text" required="false" keep-last="true" keep-date="false" order="1"/>
+    <parameter id="NSUAD" description="NSU (AD)" metadata="text" required="false" keep-last="true" keep-date="false" order="2"/>
+    <parameter id="DTVENDAAD" description="Dt. Venda (AD)" metadata="date" required="false" keep-last="true" keep-date="false" order="3"/>
+    <parameter id="DTVENDASNK" description="Dt. Venda (SNK)" metadata="date" required="false" keep-last="true" keep-date="false" order="4"/>
+    <parameter id="STATUS" description="Status" metadata="multiList:Text" listType="text" required="false" keep-last="true" keep-date="false" order="5">
+      <item value="SS" label="Somente Sankhya"/>
+      <item value="SA" label="Somente Adquirente "/>
+      <item value="CV" label="Conciliação Venda "/>
+      <item value="CD" label="Com Divergência"/>
+      <item value="SD" label="Sem Divergência"/>
+    </parameter>
+    <parameter id="CODEMP" description="EMPRESA" metadata="multiList:Text" listType="sql" required="false" keep-last="true" keep-date="false" order="6">
+      <expression type="SQL"><![CDATA[SELECT EMP.CODEMP AS VALUE,       CONCAT(CASE WHEN LJ.TIPO = 'LJ' THEN LJ.CODLOJA ELSE EMP.CODEMP END, ' - ', EMP.RAZAOSOCIAL) AS LABELFROM TSIEMP EMP         INNER JOIN AD_TGFLOJA LJ ON EMP.CODEMP = LJ.CODEMPWHERE        (LJ.TIPO IN ('CD','CDA') OR (LJ.TIPO IN ('LJ') AND LJ.CODFRANQ = 1 AND LJ.ATIVO = 'S'))ORDER BY EMP.CODEMP]]></expression>
+    </parameter>
+    <parameter id="MATRIZ" description="MATRIZ" metadata="singleList:Text" listType="sql" required="false" keep-last="false" keep-date="false" order="7">
+      <expression type="SQL"><![CDATA[SELECT CODEMPMATRIZ AS VALUE,RAZAOABREV AS LABELFROM TSIEMPWHERE CODEMP = CODEMPMATRIZAND (CODEMP < 8 OR CODEMP >= 100)]]></expression>
+    </parameter>
+    <parameter id="PEDECOMSNK" description="Ped. Ecom. Snk" metadata="text" required="false" keep-last="true" keep-date="false" order="8"/>
+    <parameter id="PEDECOMAD" description="Ped. Ecom. AD" metadata="text" required="false" keep-last="true" keep-date="false" order="9"/>
+  </prompt-parameters>
+  <level id="lvl_mkcx0b" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="100">
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_az6s48z">
+            <expression type="sql" data-source="MGEDS"><![CDATA[WITH VINCULONOPERIODO AS (    SELECT AD_TGFADQFIN.NUFIN,           AD_TGFADQFIN.IDADQUIRENTE    FROM AD_TGFADQFIN         INNER JOIN TGFFIN ON TGFFIN.NUFIN = AD_TGFADQFIN.NUFIN         INNER JOIN AD_TGFTRAPGME ON AD_TGFTRAPGME.ID = AD_TGFADQFIN.IDADQUIRENTE    WHERE CONVERT(DATE,TGFFIN.DTNEG) BETWEEN :DATA.INI AND :DATA.FIN		AND TGFFIN.CODEMP IN :CODEMP),    FINANCEIROSNK_CD_ADIANTAMENTO AS        (            SELECT CONVERT(BIGINT, TEF.NUMNSU)       AS NSU,                   FIN.DTNEG                         AS DTVENDA,                   FIN.NUFIN                         AS NUFIN,                   FIN.VLRDESDOB                     AS VLRBRUTO,                   FIN.CARTAODESC                    AS CARTAODESC,                   FIN.VLRDESDOB - FIN.CARTAODESC    AS VLRLIQUIDO,                   TIT.CARTAOTAXA                    AS VLRTAXA,                   FIN.CODPARC                       AS CODPARC,                   CONVERT(VARCHAR, FIN.DTVENC, 103) AS DTVENC,                   ISNULL(FIN.DESDOBRAMENTO, 0)      AS PARCELA,                   ECOM.NUACERTO                     AS ADIANTAMENTO,                   FIN.CODEMP                        AS CODEMP,                   FIN.CODTIPTIT                     AS CODTIPTIT,				 ECOM.NROPEDSITE                   AS NROPEDSITE            FROM AD_CTCPGTOECOMMERCE (NOLOCK) ECOM                     INNER JOIN TGFFRE (NOLOCK) FRE ON FRE.NUACERTO = ECOM.NUACERTO                     INNER JOIN TGFFIN (NOLOCK) FIN ON FIN.NUFIN = FRE.NUFIN                     INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                     INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT            WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN              AND FIN.RECDESP = 1              AND FIN.CODTIPTIT <> 98 --GIFTCARD              AND FIN.PROVISAO = 'N'              AND (FIN.CODEMP IN :CODEMP)        ),     FINANCEIROSNK_CD_PRECAPTURA AS(             SELECT                 CONVERT(BIGINT,TEF.NUMNSU) AS NSU,                 FIN.DTNEG AS DTVENDA,                 FIN.NUFIN AS NUFIN,                 FIN.VLRDESDOB AS VLRBRUTO,                 FIN.CARTAODESC AS CARTAODESC,                 FIN.VLRDESDOB - FIN.CARTAODESC AS VLRLIQUIDO,                 TIT.CARTAOTAXA AS VLRTAXA,                 FIN.CODPARC AS CODPARC,                 CONVERT(VARCHAR, FIN.DTVENC,103) AS DTVENC,                 ISNULL(FIN.DESDOBRAMENTO, 0) AS PARCELA,                 0 AS ADIANTAMENTO,                 FIN.CODEMP AS CODEMP,                 FIN.CODTIPTIT AS CODTIPTIT,                 ECOM.NROPEDSITE                   AS NROPEDSITE             FROM TGFFIN (NOLOCK) FIN                      INNER JOIN VGFVARDIF (NOLOCK) ON VGFVARDIF.NUNOTA = FIN.NUNOTA                      INNER JOIN AD_CTCPGTOECOMMERCE (NOLOCK) ECOM ON ECOM.NUNOTAPED = VGFVARDIF.NUNOTAORIG                      INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                      INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT             WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN               AND FIN.RECDESP = 1               AND FIN.CODTIPTIT <> 96               AND FIN.PROVISAO = 'N'               AND FIN.CODTIPOPER = 3201               AND ECOM.NUACERTO IS NULL               AND (FIN.CODEMP IN :CODEMP)             ),             FINANCEIROSNK_LOJASPROPRIAS_PRECAPTURA AS(             SELECT                 CONVERT(BIGINT,TEF.NUMNSU) AS NSU,                 FIN.DTNEG AS DTVENDA,                 FIN.NUFIN AS NUFIN,                 FIN.VLRDESDOB AS VLRBRUTO,                 FIN.CARTAODESC AS CARTAODESC,                 FIN.VLRDESDOB - FIN.CARTAODESC AS VLRLIQUIDO,                 TIT.CARTAOTAXA AS VLRTAXA,                 FIN.CODPARC AS CODPARC,                 CONVERT(VARCHAR, FIN.DTVENC,103) AS DTVENC,                 ISNULL(FIN.DESDOBRAMENTO, 0) AS PARCELA,                 0 AS ADIANTAMENTO,                 FIN.CODEMP AS CODEMP,                 FIN.CODTIPTIT AS CODTIPTIT,			     CAB.NUMPEDIDO2 NROPEDSITE             FROM TGFFIN (NOLOCK) FIN                      INNER JOIN TGFCAB (NOLOCK) CAB ON CAB.NUNOTA = FIN.NUNOTA                      INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                      INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT             WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN               AND FIN.RECDESP = 1               AND FIN.PROVISAO = 'N'               AND CAB.CODTIPOPER = 3289               AND CAB.NUMPEDIDO2 IS NOT NULL               AND (FIN.CODEMP IN :CODEMP)         ),     FINANCEIROSNK_LOJASPROPRIAS_ADIANTAMENTO AS(         SELECT             CONVERT(BIGINT,TEF.NUMNSU) AS NSU,             FIN.DTNEG AS DTVENDA,             FIN.NUFIN AS NUFIN,             FIN.VLRDESDOB AS VLRBRUTO,             FIN.CARTAODESC AS CARTAODESC,             FIN.VLRDESDOB - FIN.CARTAODESC AS VLRLIQUIDO,             TIT.CARTAOTAXA AS VLRTAXA,             FIN.CODPARC AS CODPARC,             CONVERT(VARCHAR, FIN.DTVENC,103) AS DTVENC,             0 AS PARCELA,             0 AS ADIANTAMENTO,             FIN.CODEMP AS CODEMP,             FIN.CODTIPTIT AS CODTIPTIT,			FIN.NUMPROCADMJUDIC NROPEDSITE         FROM TGFFIN (NOLOCK) FIN                  INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                  INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT         WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN           AND FIN.RECDESP = 1           AND FIN.PROVISAO = 'N'           AND FIN.CODTIPOPER = 4114           AND (FIN.NUMPROCADMJUDIC IS NOT NULL AND FIN.NUMPROCADMJUDIC <> '')           AND (FIN.CODEMP IN :CODEMP)     ),    FINANCEIROSNK AS (SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_CD_ADIANTAMENTO                      UNION ALL                      SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_CD_PRECAPTURA                      UNION ALL                      SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_LOJASPROPRIAS_PRECAPTURA                      UNION ALL                      SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_LOJASPROPRIAS_ADIANTAMENTO    ),     FINANCEIROPGME AS         (             SELECT                 PGME.TRANSACTION_ID AS NSU,                 CONVERT(VARCHAR, PGME.DATA_VENDA, 103) AS DTVENDA,                 PGME.AMOUNT AS VLRBRUTO,                 PGME.FEE AS VLRCUSTO,                 ROUND(PGME.AMOUNT - PGME.FEE, 2) AS VLRLIQUIDO,                 CONVERT(VARCHAR, PGME.PAYMENT_DATE, 103) AS DTVENC,                 ISNULL(PGME.INSTALLMENT, 0) AS PARCELA,                 ROUND((PGME.FEE / PGME.AMOUNT) * 100, 2) AS VLRTAXA,                 PGME.ID AS IDADQUIRENTE,                 AD_TGFLOJA.CODEMP AS CODEMP,			     AD_ORDECOM.ORDERID NROPEDSITE             FROM AD_TGFTRAPGME (NOLOCK) PGME                      INNER JOIN AD_TGFLOJASELPGME ON AD_TGFLOJASELPGME.PAGARMERECIPIENTID = PGME.RECIPIENT_ID                      INNER JOIN AD_TGFLOJA (NOLOCK) ON AD_TGFLOJA.CODLOJA = AD_TGFLOJASELPGME.CODLOJA AND (AD_TGFLOJA.TIPO IN ('CD', 'CDA') OR (AD_TGFLOJA.TIPO IN ('LJ') AND AD_TGFLOJA.CODFRANQ = 1))				    INNER JOIN AD_ORDECOM ON AD_ORDECOM.SELLERID = AD_TGFLOJA.ECOMSELLERID AND AD_ORDECOM.TID = PGME.TRANSACTION_ID             WHERE                 PGME.DATA_VENDA BETWEEN :DATA.INI AND :DATA.FIN               AND PGME.TYPE NOT IN ('refund')               AND PGME.AMOUNT > 0               AND (AD_TGFLOJA.CODEMP IN :CODEMP))SELECT    SUM(FINANCEIROSNK.VLRBRUTO) AS VLRBRUTOSNK,    SUM(FINANCEIROSNK.VLRLIQUIDO) AS VLRLIQUISNKFROM FINANCEIROSNKWHERE    (:NSUSNK = FINANCEIROSNK.NSU OR :NSUSNK IS NULL)OPTION(RECOMPILE)]]></expression>
+            <metadata>
+              <field name="VLRBRUTOSNK" label="VLRBRUTOSNK" type="F" visible="true" useFooter="false" mask="R$ #.##0,00"/>
+              <field name="VLRLIQUISNK" label="VLRLIQUISNK" type="F" visible="true" useFooter="false" mask="R$ #.##0,00"/>
+            </metadata>
+            <value-expression><![CDATA[<div style='text-align: center;'><span style='font-size: 12px;'><b>Total Bruto Sankhya</b></span></div><div style='text-align: center;'><span style='color: #0000FF; font-size: 20px;'><b>$VLRBRUTOSNK</b></span></div><div style='text-align: center;'><span style='font-size: 12px;'><b>Total Líquido Sankhya</b></span></div><div style='text-align: center;'><span style='color: #0000FF; font-size: 20px;'><b>$VLRLIQUISNK</b></span></div>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="H" tamanhoRelativo="33"/>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_az6s480">
+            <expression type="sql" data-source="MGEDS"><![CDATA[WITH VINCULONOPERIODO AS (    SELECT AD_TGFADQFIN.NUFIN,           AD_TGFADQFIN.IDADQUIRENTE    FROM AD_TGFADQFIN             INNER JOIN TGFFIN ON TGFFIN.NUFIN = AD_TGFADQFIN.NUFIN             INNER JOIN AD_TGFTRAPGME ON AD_TGFTRAPGME.ID = AD_TGFADQFIN.IDADQUIRENTE    WHERE TGFFIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN			AND TGFFIN.CODEMP IN :CODEMP        ), FINANCEIROPGME AS         (			SELECT                 PGME.TRANSACTION_ID AS NSU,                 CONVERT(VARCHAR, PGME.DATA_VENDA, 103) AS DTVENDA,                 PGME.AMOUNT AS VLRBRUTO,                 PGME.FEE AS VLRCUSTO,                 ROUND(PGME.AMOUNT - PGME.FEE, 2) AS VLRLIQUIDO,                 CONVERT(VARCHAR, PGME.PAYMENT_DATE, 103) AS DTVENC,                 ISNULL(PGME.INSTALLMENT, 0) AS PARCELA,                 ROUND((PGME.FEE / PGME.AMOUNT) * 100, 2) AS VLRTAXA,                 PGME.ID AS IDADQUIRENTE,                 AD_TGFLOJA.CODEMP AS CODEMP,                 AD_ORDECOM.ORDERID NROPEDSITE             FROM AD_TGFTRAPGME (NOLOCK) PGME                      INNER JOIN AD_TGFLOJASELPGME ON AD_TGFLOJASELPGME.PAGARMERECIPIENTID = PGME.RECIPIENT_ID                      INNER JOIN AD_TGFLOJA (NOLOCK) ON AD_TGFLOJA.CODLOJA = AD_TGFLOJASELPGME.CODLOJA AND (AD_TGFLOJA.TIPO IN ('CD', 'CDA') OR (AD_TGFLOJA.TIPO IN ('LJ') AND AD_TGFLOJA.CODFRANQ = 1))                      INNER JOIN AD_ORDECOM ON AD_ORDECOM.SELLERID = AD_TGFLOJA.ECOMSELLERID AND AD_ORDECOM.TID = PGME.TRANSACTION_ID             WHERE PGME.ID IN (SELECT IDADQUIRENTE FROM VINCULONOPERIODO)               AND PGME.TYPE NOT IN ('refund')               AND PGME.AMOUNT > 0			   AND AD_TGFLOJA.CODEMP IN :CODEMP         )SELECT    SUM(FINANCEIROPGME.VLRBRUTO) AS VLRBRUTOAD,    SUM(FINANCEIROPGME.VLRLIQUIDO) AS VLRLIQUIADFROM FINANCEIROPGMEWHERE    (:NSUAD = FINANCEIROPGME.NSU OR :NSUAD IS NULL)OPTION(RECOMPILE)]]></expression>
+            <metadata>
+              <field name="VLRBRUTOAD" label="VLRBRUTOAD" type="F" visible="true" useFooter="false" mask="R$ #.##0,00"/>
+              <field name="VLRLIQUIAD" label="VLRLIQUIAD" type="F" visible="true" useFooter="false" mask="R$ #.##0,00"/>
+            </metadata>
+            <value-expression><![CDATA[<div style='text-align: center;'><span style='font-size: 12px;'><b>Total Bruto Adquirente</b></span></div><div style='text-align: center;'><span style='color: #0000FF; font-size: 20px;'><b>$VLRBRUTOAD</b></span></div><div style='text-align: center;'><span style='font-size: 12px;'><b>Total Líquido Adquirente</b></span></div><div style='text-align: center;'><span style='color: #0000FF; font-size: 20px;'><b>$VLRLIQUIAD</b></span></div>]]></value-expression>
+          </simple-value>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="408">
+        <grid id="grd_mkcx0c" entityName="AD_TGFADQFIN" multiplaSelecao="S" useNewGrid="S">
+          <expression type="sql" data-source="MGEDS"><![CDATA[WITH VINCULONOPERIODO AS (    SELECT AD_TGFADQFIN.NUFIN,           AD_TGFADQFIN.IDADQUIRENTE    FROM AD_TGFADQFIN         INNER JOIN TGFFIN ON TGFFIN.NUFIN = AD_TGFADQFIN.NUFIN         INNER JOIN AD_TGFTRAPGME ON AD_TGFTRAPGME.ID = AD_TGFADQFIN.IDADQUIRENTE    WHERE CONVERT(DATE,TGFFIN.DTNEG) BETWEEN :DATA.INI AND :DATA.FIN		AND TGFFIN.CODEMP IN :CODEMP),    FINANCEIROSNK_CD_ADIANTAMENTO AS        (            SELECT CONVERT(BIGINT, TEF.NUMNSU)       AS NSU,                   FIN.DTNEG                         AS DTVENDA,                   FIN.NUFIN                         AS NUFIN,                   FIN.VLRDESDOB                     AS VLRBRUTO,                   FIN.CARTAODESC                    AS CARTAODESC,                   FIN.VLRDESDOB - FIN.CARTAODESC    AS VLRLIQUIDO,                   TIT.CARTAOTAXA                    AS VLRTAXA,                   FIN.CODPARC                       AS CODPARC,                   CONVERT(VARCHAR, FIN.DTVENC, 103) AS DTVENC,                   ISNULL(FIN.DESDOBRAMENTO, 0)      AS PARCELA,                   ECOM.NUACERTO                     AS ADIANTAMENTO,                   FIN.CODEMP                        AS CODEMP,                   FIN.CODTIPTIT                     AS CODTIPTIT,				 ECOM.NROPEDSITE                   AS NROPEDSITE            FROM AD_CTCPGTOECOMMERCE (NOLOCK) ECOM                     INNER JOIN TGFFRE (NOLOCK) FRE ON FRE.NUACERTO = ECOM.NUACERTO                     INNER JOIN TGFFIN (NOLOCK) FIN ON FIN.NUFIN = FRE.NUFIN                     INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                     INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT            WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN              AND FIN.RECDESP = 1              AND FIN.CODTIPTIT <> 98 --GIFTCARD              AND FIN.PROVISAO = 'N'              AND (FIN.CODEMP IN :CODEMP)        ),     FINANCEIROSNK_CD_PRECAPTURA AS(             SELECT                 CONVERT(BIGINT,TEF.NUMNSU) AS NSU,                 FIN.DTNEG AS DTVENDA,                 FIN.NUFIN AS NUFIN,                 FIN.VLRDESDOB AS VLRBRUTO,                 FIN.CARTAODESC AS CARTAODESC,                 FIN.VLRDESDOB - FIN.CARTAODESC AS VLRLIQUIDO,                 TIT.CARTAOTAXA AS VLRTAXA,                 FIN.CODPARC AS CODPARC,                 CONVERT(VARCHAR, FIN.DTVENC,103) AS DTVENC,                 ISNULL(FIN.DESDOBRAMENTO, 0) AS PARCELA,                 0 AS ADIANTAMENTO,                 FIN.CODEMP AS CODEMP,                 FIN.CODTIPTIT AS CODTIPTIT,                 ECOM.NROPEDSITE                   AS NROPEDSITE             FROM TGFFIN (NOLOCK) FIN                      INNER JOIN VGFVARDIF (NOLOCK) ON VGFVARDIF.NUNOTA = FIN.NUNOTA                      INNER JOIN AD_CTCPGTOECOMMERCE (NOLOCK) ECOM ON ECOM.NUNOTAPED = VGFVARDIF.NUNOTAORIG                      INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                      INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT             WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN               AND FIN.RECDESP = 1               AND FIN.CODTIPTIT <> 96               AND FIN.PROVISAO = 'N'               AND FIN.CODTIPOPER = 3201               AND ECOM.NUACERTO IS NULL               AND (FIN.CODEMP IN :CODEMP)             ),             FINANCEIROSNK_LOJASPROPRIAS_PRECAPTURA AS(             SELECT                 CONVERT(BIGINT,TEF.NUMNSU) AS NSU,                 FIN.DTNEG AS DTVENDA,                 FIN.NUFIN AS NUFIN,                 FIN.VLRDESDOB AS VLRBRUTO,                 FIN.CARTAODESC AS CARTAODESC,                 FIN.VLRDESDOB - FIN.CARTAODESC AS VLRLIQUIDO,                 TIT.CARTAOTAXA AS VLRTAXA,                 FIN.CODPARC AS CODPARC,                 CONVERT(VARCHAR, FIN.DTVENC,103) AS DTVENC,                 ISNULL(FIN.DESDOBRAMENTO, 0) AS PARCELA,                 0 AS ADIANTAMENTO,                 FIN.CODEMP AS CODEMP,                 FIN.CODTIPTIT AS CODTIPTIT,			     CAB.NUMPEDIDO2 NROPEDSITE             FROM TGFFIN (NOLOCK) FIN                      INNER JOIN TGFCAB (NOLOCK) CAB ON CAB.NUNOTA = FIN.NUNOTA                      INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                      INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT             WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN               AND FIN.RECDESP = 1               AND FIN.PROVISAO = 'N'               AND CAB.CODTIPOPER = 3289               AND CAB.NUMPEDIDO2 IS NOT NULL               AND (FIN.CODEMP IN :CODEMP)         ),     FINANCEIROSNK_LOJASPROPRIAS_ADIANTAMENTO AS(         SELECT             CONVERT(BIGINT,TEF.NUMNSU) AS NSU,             FIN.DTNEG AS DTVENDA,             FIN.NUFIN AS NUFIN,             FIN.VLRDESDOB AS VLRBRUTO,             FIN.CARTAODESC AS CARTAODESC,             FIN.VLRDESDOB - FIN.CARTAODESC AS VLRLIQUIDO,             TIT.CARTAOTAXA AS VLRTAXA,             FIN.CODPARC AS CODPARC,             CONVERT(VARCHAR, FIN.DTVENC,103) AS DTVENC,             0 AS PARCELA,             0 AS ADIANTAMENTO,             FIN.CODEMP AS CODEMP,             FIN.CODTIPTIT AS CODTIPTIT,			FIN.NUMPROCADMJUDIC NROPEDSITE         FROM TGFFIN (NOLOCK) FIN                  INNER JOIN TGFTEF (NOLOCK) TEF ON TEF.NUFIN = FIN.NUFIN                  INNER JOIN TGFTIT (NOLOCK) TIT ON TIT.CODTIPTIT = FIN.CODTIPTIT         WHERE FIN.DTNEG BETWEEN :DATA.INI AND :DATA.FIN           AND FIN.RECDESP = 1           AND FIN.PROVISAO = 'N'           AND FIN.CODTIPOPER = 4114           AND (FIN.NUMPROCADMJUDIC IS NOT NULL AND FIN.NUMPROCADMJUDIC <> '')           AND (FIN.CODEMP IN :CODEMP)     ),    FINANCEIROSNK AS (SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_CD_ADIANTAMENTO                      UNION ALL                      SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_CD_PRECAPTURA                      UNION ALL                      SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_LOJASPROPRIAS_PRECAPTURA                      UNION ALL                      SELECT NSU, DTVENDA, NUFIN, ROUND(VLRBRUTO,2) VLRBRUTO, ROUND(CARTAODESC,2) CARTAODESC, ROUND(VLRLIQUIDO,2) VLRLIQUIDO, VLRTAXA, CODPARC, DTVENC, PARCELA, ADIANTAMENTO, CODEMP, CODTIPTIT, NROPEDSITE                      FROM FINANCEIROSNK_LOJASPROPRIAS_ADIANTAMENTO    ),     FINANCEIROPGME AS         (             SELECT                 PGME.TRANSACTION_ID AS NSU,                 CONVERT(VARCHAR, PGME.DATA_VENDA, 103) AS DTVENDA,                 PGME.AMOUNT AS VLRBRUTO,                 PGME.FEE AS VLRCUSTO,                 ROUND(PGME.AMOUNT - PGME.FEE, 2) AS VLRLIQUIDO,                 CONVERT(VARCHAR, PGME.PAYMENT_DATE, 103) AS DTVENC,                 ISNULL(PGME.INSTALLMENT, 0) AS PARCELA,                 ROUND((PGME.FEE / PGME.AMOUNT) * 100, 2) AS VLRTAXA,                 PGME.ID AS IDADQUIRENTE,                 AD_TGFLOJA.CODEMP AS CODEMP,			     AD_ORDECOM.ORDERID NROPEDSITE             FROM AD_TGFTRAPGME (NOLOCK) PGME                      INNER JOIN AD_TGFLOJASELPGME ON AD_TGFLOJASELPGME.PAGARMERECIPIENTID = PGME.RECIPIENT_ID                      INNER JOIN AD_TGFLOJA (NOLOCK) ON AD_TGFLOJA.CODLOJA = AD_TGFLOJASELPGME.CODLOJA AND (AD_TGFLOJA.TIPO IN ('CD', 'CDA') OR (AD_TGFLOJA.TIPO IN ('LJ') AND AD_TGFLOJA.CODFRANQ = 1))				    INNER JOIN AD_ORDECOM ON AD_ORDECOM.SELLERID = AD_TGFLOJA.ECOMSELLERID AND AD_ORDECOM.TID = PGME.TRANSACTION_ID             WHERE                 PGME.DATA_VENDA BETWEEN :DATA.INI AND :DATA.FIN               AND PGME.TYPE NOT IN ('refund')               AND PGME.AMOUNT > 0               AND (AD_TGFLOJA.CODEMP IN :CODEMP)             UNION             SELECT                 PGME.TRANSACTION_ID AS NSU,                 CONVERT(VARCHAR, PGME.DATA_VENDA, 103) AS DTVENDA,                 PGME.AMOUNT AS VLRBRUTO,                 PGME.FEE AS VLRCUSTO,                 ROUND(PGME.AMOUNT - PGME.FEE, 2) AS VLRLIQUIDO,                 CONVERT(VARCHAR, PGME.PAYMENT_DATE, 103) AS DTVENC,                 ISNULL(PGME.INSTALLMENT, 0) AS PARCELA,                 ROUND((PGME.FEE / PGME.AMOUNT) * 100, 2) AS VLRTAXA,                 PGME.ID AS IDADQUIRENTE,                 AD_TGFLOJA.CODEMP AS CODEMP,			    AD_ORDECOM.ORDERID NROPEDSITE             FROM AD_TGFTRAPGME (NOLOCK) PGME                      INNER JOIN AD_TGFLOJASELPGME ON AD_TGFLOJASELPGME.PAGARMERECIPIENTID = PGME.RECIPIENT_ID                      INNER JOIN AD_TGFLOJA (NOLOCK) ON AD_TGFLOJA.CODLOJA = AD_TGFLOJASELPGME.CODLOJA AND (AD_TGFLOJA.TIPO IN ('CD', 'CDA') OR (AD_TGFLOJA.TIPO IN ('LJ') AND AD_TGFLOJA.CODFRANQ = 1))				    INNER JOIN AD_ORDECOM ON AD_ORDECOM.SELLERID = AD_TGFLOJA.ECOMSELLERID AND AD_ORDECOM.TID = PGME.TRANSACTION_ID             WHERE PGME.ID IN (SELECT IDADQUIRENTE FROM VINCULONOPERIODO)               AND PGME.TYPE NOT IN ('refund')               AND PGME.AMOUNT > 0               AND (AD_TGFLOJA.CODEMP IN :CODEMP)         )SELECT ISNULL(FINANCEIROSNK.NUFIN, 0) AS NUFIN,       ISNULL(FINANCEIROPGME.IDADQUIRENTE, 0) AS IDADQUIRENTE,       ISNULL(FINANCEIROSNK.PARCELA,0) AS PARCELASNK,       ISNULL(FINANCEIROPGME.PARCELA,0) AS PARCELAAD,       ISNULL(FINANCEIROSNK.NSU,0) AS NSUSNK,       ISNULL(FINANCEIROPGME.NSU,0) AS NSUAD,       ISNULL(FINANCEIROSNK.VLRBRUTO,0) AS VLRBRUTOSNK,       ISNULL(FINANCEIROPGME.VLRBRUTO,0) AS VLRBRUTOAD,       ISNULL(FINANCEIROSNK.VLRLIQUIDO,0) AS VLRLIQUISNK,       ISNULL(FINANCEIROPGME.VLRLIQUIDO,0) AS VLRLIQUIAD,       ISNULL(FINANCEIROSNK.CARTAODESC,0) AS VLRTXSNK,       ISNULL(FINANCEIROPGME.VLRCUSTO,0) AS VLRTXAD,       CONVERT(VARCHAR,FINANCEIROSNK.DTVENDA,103) AS DTVENDASNK,       ISNULL(FINANCEIROPGME.DTVENDA,0) AS DTVENDAAD,       FINANCEIROSNK.DTVENC AS DTVENCSNK,       FINANCEIROPGME.DTVENC AS DTVENCAD,       ISNULL(FINANCEIROSNK.CODPARC,0) AS CODPARC,       ISNULL(FINANCEIROSNK.ADIANTAMENTO,0) AS ADIANTAMENTO,       ISNULL(FINANCEIROSNK.CODEMP,0) AS CODEMPSNK,       ISNULL(FINANCEIROPGME.CODEMP,0) AS CODEMPAD,       ISNULL(FINANCEIROSNK.CODTIPTIT,0) AS CODTIPTIT,       ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) AS VLRBRUTODIF,       ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) AS VLRLIQDIF,       ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) AS VLRBTAXADIF,       DATEDIFF(DAY,                ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')),                ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) AS DTVENCDIFDIAS,       CASE           WHEN EXISTS(SELECT *                       FROM AD_TGFCONCVENDADQUIRENTE VENDA                       WHERE VENDA.NUFIN = FINANCEIROSNK.NUFIN                         AND VENDA.IDADQUIRENTE = FINANCEIROPGME.IDADQUIRENTE) THEN 'CONCILIADO VENDA'           WHEN FINANCEIROSNK.NSU IS NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'SOMENTE ADQUIRENTE'           WHEN FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NULL THEN 'SOMENTE SANKHYA'           WHEN (ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) <> 0 OR                 ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) <> 0 OR                 ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) <> 0 OR                 DATEDIFF(DAY,                          ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')),                          ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) <> 0) AND                FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'COM DIVERGENCIA'           ELSE 'SEM DIVERGENCIA' END                                                   AS STATUS,       'WHITE' AS BKCOLORFROM VINCULONOPERIODO         		   INNER JOIN FINANCEIROSNK ON FINANCEIROSNK.NUFIN = VINCULONOPERIODO.NUFIN         INNER JOIN FINANCEIROPGME ON FINANCEIROPGME.IDADQUIRENTE = VINCULONOPERIODO.IDADQUIRENTEWHERE    (:NSUSNK = FINANCEIROSNK.NSU OR :NSUSNK IS NULL)  AND (:NSUAD = FINANCEIROPGME.NSU OR :NSUAD IS NULL)  AND (:PEDECOMSNK = FINANCEIROSNK.NROPEDSITE OR :PEDECOMSNK IS NULL)  AND (:PEDECOMAD = FINANCEIROPGME.NROPEDSITE OR :PEDECOMAD IS NULL)  AND ((CASE            WHEN EXISTS(SELECT *                        FROM AD_TGFCONCVENDADQUIRENTE VENDA                        WHERE VENDA.NUFIN = FINANCEIROSNK.NUFIN                          AND VENDA.IDADQUIRENTE = FINANCEIROPGME.IDADQUIRENTE) THEN 'CV'            WHEN FINANCEIROSNK.NSU IS NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'SA'            WHEN FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NULL THEN 'SS'            WHEN (ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) <> 0 OR ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) <> 0 OR ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) <> 0 OR DATEDIFF(DAY, ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')), ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) <> 0) AND FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'CD'            ELSE 'SD'    END) IN :STATUS)UNION ALLSELECT ISNULL(FINANCEIROSNK.NUFIN, 0) AS NUFIN,       ISNULL(FINANCEIROPGME.IDADQUIRENTE, 0) AS IDADQUIRENTE,       ISNULL(FINANCEIROSNK.PARCELA,0) AS PARCELASNK,       ISNULL(FINANCEIROPGME.PARCELA,0) AS PARCELAAD,       ISNULL(FINANCEIROSNK.NSU,0) AS NSUSNK,       ISNULL(FINANCEIROPGME.NSU,0) AS NSUAD,       ISNULL(FINANCEIROSNK.VLRBRUTO,0) AS VLRBRUTOSNK,       ISNULL(FINANCEIROPGME.VLRBRUTO,0) AS VLRBRUTOAD,       ISNULL(FINANCEIROSNK.VLRLIQUIDO,0) AS VLRLIQUISNK,       ISNULL(FINANCEIROPGME.VLRLIQUIDO,0) AS VLRLIQUIAD,       ISNULL(FINANCEIROSNK.CARTAODESC,0) AS VLRTXSNK,       ISNULL(FINANCEIROPGME.VLRCUSTO,0) AS VLRTXAD,       CONVERT(VARCHAR,FINANCEIROSNK.DTVENDA,103) AS DTVENDASNK,       ISNULL(FINANCEIROPGME.DTVENDA,0) AS DTVENDAAD,       FINANCEIROSNK.DTVENC AS DTVENCSNK,       FINANCEIROPGME.DTVENC AS DTVENCAD,       ISNULL(FINANCEIROSNK.CODPARC,0) AS CODPARC,       ISNULL(FINANCEIROSNK.ADIANTAMENTO,0) AS ADIANTAMENTO,       ISNULL(FINANCEIROSNK.CODEMP,0) AS CODEMPSNK,       ISNULL(FINANCEIROPGME.CODEMP,0) AS CODEMPAD,       ISNULL(FINANCEIROSNK.CODTIPTIT,0) AS CODTIPTIT,       ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) AS VLRBRUTODIF,       ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) AS VLRLIQDIF,       ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) AS VLRBTAXADIF,       DATEDIFF(DAY,                ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')),                ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) AS DTVENCDIFDIAS,       CASE           WHEN EXISTS(SELECT *                       FROM AD_TGFCONCVENDADQUIRENTE VENDA                       WHERE VENDA.NUFIN = FINANCEIROSNK.NUFIN                         AND VENDA.IDADQUIRENTE = FINANCEIROPGME.IDADQUIRENTE) THEN 'CONCILIADO VENDA'           WHEN FINANCEIROSNK.NSU IS NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'SOMENTE ADQUIRENTE'           WHEN FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NULL THEN 'SOMENTE SANKHYA'           WHEN (ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) <> 0 OR                 ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) <> 0 OR                 ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) <> 0 OR                 DATEDIFF(DAY,                          ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')),                          ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) <> 0) AND                FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'COM DIVERGENCIA'           ELSE 'SEM DIVERGENCIA' END                                                   AS STATUS,       'WHITE' AS BKCOLORFROM FINANCEIROSNK         LEFT JOIN FINANCEIROPGME ON FINANCEIROPGME.IDADQUIRENTE = 0WHERE        FINANCEIROSNK.NUFIN NOT IN (SELECT NUFIN FROM AD_TGFADQFIN)  AND (:NSUSNK = FINANCEIROSNK.NSU OR :NSUSNK IS NULL)  AND (:PEDECOMSNK = FINANCEIROSNK.NROPEDSITE OR :PEDECOMSNK IS NULL)  AND ('SS' IN :STATUS)UNION ALLSELECT ISNULL(FINANCEIROSNK.NUFIN, 0) AS NUFIN,       ISNULL(FINANCEIROPGME.IDADQUIRENTE, 0) AS IDADQUIRENTE,       ISNULL(FINANCEIROSNK.PARCELA,0) AS PARCELASNK,       ISNULL(FINANCEIROPGME.PARCELA,0) AS PARCELAAD,       ISNULL(FINANCEIROSNK.NSU,0) AS NSUSNK,       ISNULL(FINANCEIROPGME.NSU,0) AS NSUAD,       ISNULL(FINANCEIROSNK.VLRBRUTO,0) AS VLRBRUTOSNK,       ISNULL(FINANCEIROPGME.VLRBRUTO,0) AS VLRBRUTOAD,       ISNULL(FINANCEIROSNK.VLRLIQUIDO,0) AS VLRLIQUISNK,       ISNULL(FINANCEIROPGME.VLRLIQUIDO,0) AS VLRLIQUIAD,       ISNULL(FINANCEIROSNK.CARTAODESC,0) AS VLRTXSNK,       ISNULL(FINANCEIROPGME.VLRCUSTO,0) AS VLRTXAD,       CONVERT(VARCHAR,FINANCEIROSNK.DTVENDA,103) AS DTVENDASNK,       ISNULL(FINANCEIROPGME.DTVENDA,0) AS DTVENDAAD,       FINANCEIROSNK.DTVENC AS DTVENCSNK,       FINANCEIROPGME.DTVENC AS DTVENCAD,       ISNULL(FINANCEIROSNK.CODPARC,0) AS CODPARC,       ISNULL(FINANCEIROSNK.ADIANTAMENTO,0) AS ADIANTAMENTO,       ISNULL(FINANCEIROSNK.CODEMP,0) AS CODEMPSNK,       ISNULL(FINANCEIROPGME.CODEMP,0) AS CODEMPAD,       ISNULL(FINANCEIROSNK.CODTIPTIT,0) AS CODTIPTIT,       ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) AS VLRBRUTODIF,       ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) AS VLRLIQDIF,       ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) AS VLRBTAXADIF,       DATEDIFF(DAY,                ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')),                ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) AS DTVENCDIFDIAS,       CASE           WHEN EXISTS(SELECT *                       FROM AD_TGFCONCVENDADQUIRENTE VENDA                       WHERE VENDA.NUFIN = FINANCEIROSNK.NUFIN                         AND VENDA.IDADQUIRENTE = FINANCEIROPGME.IDADQUIRENTE) THEN 'CONCILIADO VENDA'           WHEN FINANCEIROSNK.NSU IS NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'SOMENTE ADQUIRENTE'           WHEN FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NULL THEN 'SOMENTE SANKHYA'           WHEN (ISNULL(FINANCEIROSNK.VLRBRUTO, 0) - ISNULL(FINANCEIROPGME.VLRBRUTO, 0) <> 0 OR                 ISNULL(FINANCEIROSNK.VLRLIQUIDO, 0) - ISNULL(FINANCEIROPGME.VLRLIQUIDO, 0) <> 0 OR                 ISNULL(FINANCEIROSNK.CARTAODESC, 0) - ISNULL(FINANCEIROPGME.VLRCUSTO, 0) <> 0 OR                 DATEDIFF(DAY,                          ISNULL(FINANCEIROPGME.DTVENC, CONVERT(DATE, '1900-01-01')),                          ISNULL(FINANCEIROSNK.DTVENC, CONVERT(DATE, '1900-01-01'))) <> 0) AND                FINANCEIROSNK.NSU IS NOT NULL AND FINANCEIROPGME.NSU IS NOT NULL THEN 'COM DIVERGENCIA'           ELSE 'SEM DIVERGENCIA' END                                                   AS STATUS,       'WHITE' AS BKCOLORFROM FINANCEIROPGME         LEFT JOIN FINANCEIROSNK ON FINANCEIROSNK.NUFIN = 0WHERE        FINANCEIROPGME.IDADQUIRENTE NOT IN (SELECT IDADQUIRENTE FROM AD_TGFADQFIN)  AND (:NSUAD = FINANCEIROPGME.NSU OR :NSUAD IS NULL)  AND (:PEDECOMAD = FINANCEIROPGME.NROPEDSITE OR :PEDECOMAD IS NULL)  AND ('SA' IN :STATUS)OPTION(RECOMPILE)]]></expression>
+          <metadata>
+            <field name="NUFIN" label="Nro. Fin." type="I" visible="true" useFooter="false">
+              <formatter equalThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+            </field>
+            <field name="IDADQUIRENTE" label="ID Adquirente" type="I" visible="true" useFooter="false">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+            </field>
+            <field name="PARCELASNK" label="Parcela SK" type="I" visible="true" useFooter="false">
+              <formatter formula="true">
+                <formula><![CDATA[$PARCELAAD != $PARCELASNK]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$PARCELAAD == $PARCELASNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="PARCELAAD" label="Parcela AD" type="I" visible="true" useFooter="false">
+              <formatter formula="true">
+                <formula><![CDATA[$PARCELAAD != $PARCELASNK]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$PARCELAAD == $PARCELASNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="NSUSNK" label="NSU SK" type="I" visible="true" useFooter="false">
+              <formatter formula="true">
+                <formula><![CDATA[$NSUSNK != $NSUAD]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$NSUSNK == $NSUAD]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="NSUAD" label="NSU AD" type="I" visible="true" useFooter="false">
+              <formatter formula="true">
+                <formula><![CDATA[$NSUSNK != $NSUAD]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$NSUSNK == $NSUAD]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="VLRBRUTOSNK" label="Vlr. Bruto SK" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter formula="true">
+                <formula><![CDATA[$VLRBRUTOAD != $VLRBRUTOSNK ]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$VLRBRUTOAD == $VLRBRUTOSNK ]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="VLRBRUTOAD" label="Vlr. Bruto AD" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter formula="true">
+                <formula><![CDATA[$VLRBRUTOAD != $VLRBRUTOSNK ]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$VLRBRUTOAD == $VLRBRUTOSNK ]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="VLRLIQUISNK" label="Vlr. Liq. SK" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter formula="true">
+                <formula><![CDATA[$VLRLIQUISNK != $VLRLIQUIAD]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$VLRLIQUISNK == $VLRLIQUIAD]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="VLRLIQUIAD" label="Vlr. Liq. AD" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter formula="true">
+                <formula><![CDATA[$VLRLIQUISNK != $VLRLIQUIAD]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$VLRLIQUISNK == $VLRLIQUIAD]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="VLRTXSNK" label="Vlr. Taxa SK" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter formula="true">
+                <formula><![CDATA[$VLRTXAD != $VLRTXSNK]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$VLRTXAD == $VLRTXSNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="VLRTXAD" label="Vlr. Taxa AD" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter formula="true">
+                <formula><![CDATA[$VLRTXAD != $VLRTXSNK]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$VLRTXAD == $VLRTXSNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="DTVENDASNK" label="Dt. Venda SK" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY">
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENDAAD != $DTVENDASNK]]></formula>
+                <![CDATA[<span style="color:#0000FF">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENDAAD == $DTVENDASNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="DTVENDAAD" label="Dt. Venda Ad" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY">
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENDAAD != $DTVENDASNK]]></formula>
+                <![CDATA[<span style="color:#0000FF">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENDAAD == $DTVENDASNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="DTVENCSNK" label="Dt. Venc. SK" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY">
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENCSNK != $DTVENCAD]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENCSNK == $DTVENCAD]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="DTVENCAD" label="Dt. Venc AD" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY">
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENCSNK != $DTVENCAD]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$DTVENCSNK == $DTVENCAD]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="CODPARC" label="Cod. Parc" type="I" visible="true" useFooter="false">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+            </field>
+            <field name="ADIANTAMENTO" label="Adiantamento" type="I" visible="true" useFooter="false">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+            </field>
+            <field name="CODEMPSNK" label="Cod. Emp. SK" type="I" visible="true" useFooter="false">
+              <formatter formula="true">
+                <formula><![CDATA[$CODEMPAD != $CODEMPSNK]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$CODEMPAD == $CODEMPSNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="CODEMPAD" label="Cod. Emp. AD" type="I" visible="true" useFooter="false">
+              <formatter formula="true">
+                <formula><![CDATA[$CODEMPAD != $CODEMPSNK]]></formula>
+                <![CDATA[<span style="color:#FF0000">$VALUE</span>]]>
+              </formatter>
+              <formatter formula="true">
+                <formula><![CDATA[$CODEMPAD == $CODEMPSNK]]></formula>
+                <![CDATA[<span style="color:#006600">$VALUE</span>]]>
+              </formatter>
+            </field>
+            <field name="CODTIPTIT" label="Tipo de Título" type="I" visible="true" useFooter="false"/>
+            <field name="VLRBRUTODIF" label="Vlr. Bruto Dif" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+            </field>
+            <field name="VLRLIQDIF" label="Vlr. Liq. Dif" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+            </field>
+            <field name="VLRBTAXADIF" label="Vlr. Taxa Dif" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+            </field>
+            <field name="DTVENCDIFDIAS" label="Dif. Dt. Venc" type="I" visible="true" useFooter="false">
+              <formatter notEqualThan="0"><![CDATA[<span style="color:#FF0000">$VALUE</span>]]></formatter>
+              <formatter equalThan="0"><![CDATA[<span style="color:#006600">$VALUE</span>]]></formatter>
+            </field>
+            <field name="STATUS" label="Status" type="S" visible="true" useFooter="false"/>
+            <field name="BKCOLOR" label="BKCOLOR" type="S" visible="true" useFooter="false"/>
+          </metadata>
+        </grid>
+      </container>
+    </container>
+  </level>
+</gadget>

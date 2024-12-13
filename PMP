@@ -1,0 +1,206 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="P_DT" description="Data" metadata="datePeriod" required="true" keep-last="true" keep-date="false" order="0"/>
+    <parameter id="P_CODUSU" description="Usuário" metadata="multiList:Text" listType="sql" required="true" keep-last="true" keep-date="false" order="1">
+      <expression type="SQL"><![CDATA[SELECT CODUSU AS VALUE, CONCAT(CODUSU,'-',NOMEUSU) AS LABELFROM TSIUSU WHERE CODGRUPO = 143]]></expression>
+    </parameter>
+  </prompt-parameters>
+  <level id="lvl_az8ifbt" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="V" tamanhoRelativo="144">
+        <container orientacao="H" tamanhoRelativo="181">
+          <container orientacao="H" tamanhoRelativo="50">
+            <container orientacao="V" tamanhoRelativo="33">
+              <simple-value id="svl_k97eif">
+                <value-expression><![CDATA[<div style='text-align: center;'><td width=25%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+              </simple-value>
+            </container>
+            <container orientacao="V" tamanhoRelativo="33">
+              <simple-value id="svl_miqqm8">
+                <value-expression><![CDATA[<br><br><div style='text-align: center;'><span style='font-size: 25px; color: #4D3522;'>Prazo médio de pagamento - PMP</span></div></br></br>]]></value-expression>
+                <on-click navigate-to="lvl_cloq3o">
+                  <param id="A_GRUEMP"/>
+                  <param id="A_TIPOPER"/>
+                </on-click>
+              </simple-value>
+            </container>
+            <container orientacao="V" tamanhoRelativo="33">
+              <simple-value id="svl_k97ei5">
+                <value-expression><![CDATA[<br><div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div></br>]]></value-expression>
+              </simple-value>
+            </container>
+          </container>
+        </container>
+        <container orientacao="V" tamanhoRelativo="320">
+          <container orientacao="H" tamanhoRelativo="177">
+            <container orientacao="V" tamanhoRelativo="50">
+              <simple-value id="svl_ff86hp">
+                <expression type="sql" data-source="MGEDS"><![CDATA[WITH BASE AS (  SELECT      V.NUFIN,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS DIAS,     AVG(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS MEDIA_DIAS,     SUM(V.VLRDESDOB) AS VLRDESDOB,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC) * V.VLRDESDOB) AS PONDERADAFROM TGFFIN FINNER JOIN TGFCAB C ON C.NUNOTA = F.NUNOTAINNER JOIN VGFFIN V ON C.NUNOTA = V.NUNOTALEFT JOIN TSIUSU U1 ON U1.CODUSU = C.CODUSUINCWHERE C.CODTIPOPER IN (3265,3264,3273,3268,3292,2149,3269,2145)AND F.RECDESP = -1AND C.CODEMP >= 100AND C.TIPMOV IN ('C', 'O')AND C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND U1.CODGRUPO = 143GROUP BY V.NUFIN)SELECT   CONVERT(INT, ROUND(SUM(PONDERADA) / SUM(VLRDESDOB),0)) AS PMPFROM     BASE;]]></expression>
+                <metadata>
+                  <field name="PMP" label="PMP" type="I" visible="true" useFooter="false"/>
+                </metadata>
+                <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt7">Lojas Próprias <br>$PMP</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt7 {    text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }              @font-face {        font-family: ' Franklin Gothic';            }</style>]]></value-expression>
+                <on-click navigate-to="lvl_cloq3o">
+                  <param id="A_GRUEMP">LP</param>
+                  <param id="A_TIPOPER"/>
+                  <param id="A_CODUSU"/>
+                </on-click>
+              </simple-value>
+            </container>
+            <container orientacao="V" tamanhoRelativo="50">
+              <simple-value id="svl_ff86hq">
+                <expression type="sql" data-source="MGEDS"><![CDATA[WITH BASE AS (  SELECT      PEDIDO.CODUSUINC as USUPEDIDO,     PEDIDO.NUNOTA,     V.NUFIN,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS DIAS,     AVG(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS MEDIA_DIAS,     SUM(V.VLRDESDOB) AS VLRDESDOB,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC) * V.VLRDESDOB) AS PONDERADAFROM TGFFIN FINNER JOIN TGFCAB C ON C.NUNOTA = F.NUNOTAINNER JOIN VGFFIN V ON C.NUNOTA = V.NUNOTALEFT JOIN TGFVAR ON C.NUNOTA = TGFVAR.NUNOTALEFT JOIN TGFCAB PEDIDO ON PEDIDO.NUNOTA = TGFVAR.NUNOTAORIGLEFT JOIN TSIUSU U2 ON U2.CODUSU = PEDIDO.CODUSUINCWHERE C.CODTIPOPER IN (2001, 2003, 2008, 2002, 2102)AND F.RECDESP = -1AND C.CODEMP < 10AND C.TIPMOV IN ('C', 'O')AND C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND U2.CODGRUPO = 143GROUP BY V.NUFIN,PEDIDO.CODUSUINC, PEDIDO.NUNOTA)SELECT   CONVERT(INT, ROUND(SUM(PONDERADA) / SUM(VLRDESDOB),0)) AS PMPADMFROM     BASE;]]></expression>
+                <metadata>
+                  <field name="PMPADM" label="PMPADM" type="I" visible="true" useFooter="false"/>
+                </metadata>
+                <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt2">Empresas Administrativas<br>$PMPADM</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;          padding: 40px 0;          text-decoration: underline;}.divClassbt2{        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }              @font-face {        font-family: ' Franklin Gothic';            }</style>]]></value-expression>
+                <on-click navigate-to="lvl_cloq3o">
+                  <param id="A_GRUEMP">EA</param>
+                  <param id="A_TIPOPER"/>
+                </on-click>
+              </simple-value>
+            </container>
+          </container>
+          <container orientacao="H" tamanhoRelativo="279">
+            <container orientacao="H" tamanhoRelativo="50">
+              <container orientacao="V" tamanhoRelativo="50">
+                <simple-value id="svl_ff86hr">
+                  <expression type="sql" data-source="MGEDS"><![CDATA[WITH BASE AS (  SELECT      V.NUFIN,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS DIAS,     AVG(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS MEDIA_DIAS,     SUM(V.VLRDESDOB) AS VLRDESDOB,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC) * V.VLRDESDOB) AS PONDERADAFROM TGFFIN FINNER JOIN TGFCAB C ON C.NUNOTA = F.NUNOTAINNER JOIN VGFFIN V ON C.NUNOTA = V.NUNOTALEFT JOIN TSIUSU U1 ON U1.CODUSU = C.CODUSUINCWHERE C.CODTIPOPER IN (2145,3269)AND F.RECDESP = -1AND C.CODEMP >= 100AND C.TIPMOV IN ('C', 'O')AND C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND U1.CODGRUPO = 143GROUP BY V.NUFIN)SELECT   CONVERT(INT, ROUND(SUM(PONDERADA) / SUM(VLRDESDOB),0)) AS PMPSERVFROM     BASE;]]></expression>
+                  <metadata>
+                    <field name="PMPSERV" label="PMPSERV" type="I" visible="true" useFooter="false"/>
+                  </metadata>
+                  <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt2">Serviço<br>$PMPSERV</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {       text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }              @font-face {        font-family: ' Franklin Gothic';            }</style>]]></value-expression>
+                  <on-click navigate-to="lvl_cloq3o">
+                    <param id="A_GRUEMP">LP</param>
+                    <param id="A_TIPOPER">SLP</param>
+                    <param id="A_CODUSU"/>
+                  </on-click>
+                </simple-value>
+              </container>
+              <container orientacao="V" tamanhoRelativo="50">
+                <simple-value id="svl_ff86hs">
+                  <expression type="sql" data-source="MGEDS"><![CDATA[WITH BASE AS (  SELECT      V.NUFIN,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS DIAS,     AVG(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS MEDIA_DIAS,     SUM(V.VLRDESDOB) AS VLRDESDOB,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC) * V.VLRDESDOB) AS PONDERADAFROM TGFFIN FINNER JOIN TGFCAB C ON C.NUNOTA = F.NUNOTAINNER JOIN VGFFIN V ON C.NUNOTA = V.NUNOTALEFT JOIN TSIUSU U1 ON U1.CODUSU = C.CODUSUINCWHERE C.CODTIPOPER IN (3265,3264,3273,3268,3292,2149)AND F.RECDESP = -1AND C.CODEMP >= 100AND C.TIPMOV IN ('C', 'O')AND C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND U1.CODGRUPO = 143GROUP BY V.NUFIN)SELECT   CONVERT(INT, ROUND(SUM(PONDERADA) / SUM(VLRDESDOB),0)) AS PMPPRODFROM     BASE;]]></expression>
+                  <metadata>
+                    <field name="PMPPROD" label="PMPPROD" type="I" visible="true" useFooter="false"/>
+                  </metadata>
+                  <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt2">Produto<br>$PMPPROD</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {  text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }              @font-face {        font-family: ' Franklin Gothic';            }</style>]]></value-expression>
+                  <on-click navigate-to="lvl_cloq3o">
+                    <param id="A_GRUEMP">LP</param>
+                    <param id="A_TIPOPER">PLP</param>
+                    <param id="A_CODUSU"/>
+                  </on-click>
+                </simple-value>
+              </container>
+            </container>
+            <container orientacao="H" tamanhoRelativo="50">
+              <container orientacao="V" tamanhoRelativo="50">
+                <simple-value id="svl_ff86ht">
+                  <expression type="sql" data-source="MGEDS"><![CDATA[WITH BASE AS (  SELECT      PEDIDO.CODUSUINC as USUPEDIDO,     PEDIDO.NUNOTA,     V.NUFIN,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS DIAS,     AVG(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS MEDIA_DIAS,     SUM(V.VLRDESDOB) AS VLRDESDOB,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC) * V.VLRDESDOB) AS PONDERADAFROM TGFFIN FINNER JOIN TGFCAB C ON C.NUNOTA = F.NUNOTAINNER JOIN VGFFIN V ON C.NUNOTA = V.NUNOTALEFT JOIN TGFVAR ON C.NUNOTA = TGFVAR.NUNOTALEFT JOIN TGFCAB PEDIDO ON PEDIDO.NUNOTA = TGFVAR.NUNOTAORIGLEFT JOIN TSIUSU U2 ON U2.CODUSU = PEDIDO.CODUSUINCWHERE C.CODTIPOPER IN (2002,2102)AND F.RECDESP = -1AND C.CODEMP < 10AND C.TIPMOV IN ('C', 'O')AND C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND U2.CODGRUPO = 143GROUP BY V.NUFIN,PEDIDO.CODUSUINC, PEDIDO.NUNOTA)SELECT   CONVERT(INT, ROUND(SUM(PONDERADA) / SUM(VLRDESDOB),0)) AS PMPSERVADMFROM     BASE;]]></expression>
+                  <metadata>
+                    <field name="PMPSERVADM" label="PMPSERVADM" type="I" visible="true" useFooter="false"/>
+                  </metadata>
+                  <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt2">Serviço<br>$PMPSERVADM</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }              @font-face {        font-family: ' Franklin Gothic';            }</style>]]></value-expression>
+                  <on-click navigate-to="lvl_cloq3o">
+                    <param id="A_GRUEMP">EA</param>
+                    <param id="A_TIPOPER">SEA</param>
+                    <param id="A_CODUSU"/>
+                  </on-click>
+                </simple-value>
+              </container>
+              <container orientacao="V" tamanhoRelativo="50">
+                <simple-value id="svl_kwsfrh">
+                  <expression type="sql" data-source="MGEDS"><![CDATA[WITH BASE AS (  SELECT      PEDIDO.CODUSUINC as USUPEDIDO,     PEDIDO.NUNOTA,     V.NUFIN,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS DIAS,     AVG(DATEDIFF(DAY, V.DTNEG, V.DTVENC)) AS MEDIA_DIAS,     SUM(V.VLRDESDOB) AS VLRDESDOB,     SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC) * V.VLRDESDOB) AS PONDERADAFROM TGFFIN FINNER JOIN TGFCAB C ON C.NUNOTA = F.NUNOTAINNER JOIN VGFFIN V ON C.NUNOTA = V.NUNOTALEFT JOIN TGFVAR ON C.NUNOTA = TGFVAR.NUNOTALEFT JOIN TGFCAB PEDIDO ON PEDIDO.NUNOTA = TGFVAR.NUNOTAORIGLEFT JOIN TSIUSU U2 ON U2.CODUSU = PEDIDO.CODUSUINCWHERE C.CODTIPOPER IN (2001,2003,2008)AND F.RECDESP = -1AND C.CODEMP < 10AND C.TIPMOV IN ('C', 'O')AND C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND U2.CODGRUPO = 143GROUP BY V.NUFIN,PEDIDO.CODUSUINC, PEDIDO.NUNOTA)SELECT   CONVERT(INT, ROUND(SUM(PONDERADA) / SUM(VLRDESDOB),0)) AS PMPPRODADMFROM     BASE;]]></expression>
+                  <metadata>
+                    <field name="PMPPRODADM" label="PMPPRODADM" type="I" visible="true" useFooter="false"/>
+                  </metadata>
+                  <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt2">Produto<br>$PMPPRODADM</br></div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {  text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }              @font-face {        font-family: ' Franklin Gothic';            }</style>]]></value-expression>
+                  <on-click navigate-to="lvl_cloq3o">
+                    <param id="A_GRUEMP">EA</param>
+                    <param id="A_TIPOPER">PEA</param>
+                    <param id="A_CODUSU"/>
+                  </on-click>
+                </simple-value>
+              </container>
+            </container>
+          </container>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="100">
+        <container orientacao="H" tamanhoRelativo="174">
+          <container orientacao="V" tamanhoRelativo="50">
+            <simple-value id="svl_k97emm">
+              <value-expression><![CDATA[<div style='text-align: center;'><span style='font-size: 25px; color: #4D3522;'>PMP Por usuário</span></div>]]></value-expression>
+            </simple-value>
+          </container>
+          <container orientacao="V" tamanhoRelativo="50"/>
+        </container>
+        <container orientacao="H" tamanhoRelativo="725">
+          <container orientacao="V" tamanhoRelativo="50">
+            <grid id="grd_k3inde" useNewGrid="S" tamTexto="18">
+              <expression type="sql" data-source="MGEDS"><![CDATA[SELECT  U.NOMEUSU,   U.CODUSU, CONVERT(INT, ROUND( SUM(DATEDIFF(DAY, V.DTNEG, V.DTVENC)*V.VLRDESDOB)/ SUM(V.VLRDESDOB) ,0)) AS PMPFROM TGFCAB CINNER JOIN TSIUSU U ON U.CODUSU = C.CODUSUINCINNER JOIN VGFFIN V ON V.NUNOTA = C.NUNOTA WHERE C.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FIN         AND U.AD_PMP = 'S'        AND         C.CODTIPOPER IN (2002, 2145, 3269, 2102,2001, 2003, 2008, 3265, 3264, 3273, 3268, 3292, 2149)GROUP BY U.NOMEUSU, U.CODUSU]]></expression>
+              <metadata>
+                <field name="NOMEUSU" label="Usuário" type="S" visible="true" useFooter="false"/>
+                <field name="CODUSU" label="CODUSU" type="I" visible="true" useFooter="false"/>
+                <field name="PMP" label="Prazo médio de pagamento" type="I" visible="true" useFooter="false"/>
+              </metadata>
+              <on-click navigate-to="lvl_cloq3o">
+                <param id="A_GRUEMP">LP</param>
+                <param id="A_TIPOPER"/>
+                <param id="A_CODUSU">$CODUSU</param>
+              </on-click>
+            </grid>
+          </container>
+          <container orientacao="V" tamanhoRelativo="50"/>
+        </container>
+      </container>
+    </container>
+  </level>
+  <level id="lvl_cloq3o" description="ANALITICO">
+    <args>
+      <arg id="A_GRUEMP" type="integer"/>
+      <arg id="A_TIPOPER" type="integer"/>
+      <arg id="A_CODUSU" type="integer"/>
+    </args>
+    <container orientacao="V" tamanhoRelativo="100">
+      <grid id="grd_cloq3p" multiplaSelecao="S" useNewGrid="S">
+        <expression type="sql" data-source="MGEDS"><![CDATA[SELECT FIN.NUFIN,CAB.CODTIPOPER, OPE.DESCROPER,CAB.DTNEG, FIN.DHMOV,PAR.CODPARC, PAR.NOMEPARC AS RAZAOSOCIALPAR, FIN.NUMNOTA,FIN.CODNAT, NAT.DESCRNAT,FIN.CODCENCUS, CUS.DESCRCENCUS,FIN.CODEMP, EMP.NOMEFANTASIA,FIN.DTVENC,FIN.DTENTSAI AS DTEMISSAO,FIN.VLRDESC, FIN.VLRJURO,FIN.VLRLIQUIDO,FIN.VLRDESDOB,FIN.HISTORICO,UFS.DESCRICAO AS ESTADO, CAB.NUNOTA,FIN.DTENTSAI,CAB.CODUSUINC,FIN.DHBAIXA,PEDIDO.NUNOTA AS PEDIDO,PEDIDO.CODUSUINC AS USUPEDIDO,DATEDIFF(DAY, FIN.DTNEG, FIN.DTVENC) AS DIAS,SUM(DATEDIFF(DAY, FIN.DTNEG, FIN.DTVENC) * FIN.VLRDESDOB) AS PONDERADA,CASE WHEN CAB.STATUSNOTA = 'L' THEN 'Sim' ELSE 'Não' END AS CONFIRMADA,CASE WHEN FIN.PROVISAO = 'S' THEN 'Provisão' ELSE 'Real' END AS PROVISAO,CASE 	WHEN (LIBFIS.EVENTO = 1007 AND LIBFIS.DHLIB IS NOT NULL) THEN 'Liberado'	WHEN (LIBFIS.EVENTO = 1007 AND LIBFIS.DHLIB IS NULL) THEN 'Pendente de liberação'	ELSE 'Liberação não solicitada'END AS LIBERACAOFISCAL,CASE 	WHEN (LIBFIN.EVENTO IN (24,44) AND LIBFIN.DHLIB IS NOT NULL) THEN 'Liberado'	WHEN (LIBFIN.NUCHAVE IS NULL) THEN 'Liberação não solicitada'	WHEN (LIBFIN.EVENTO IN (24,44) AND LIBFIN.DHLIB IS NULL) THEN 'Pendente de liberação'END AS LIBERACAODIRFINFROM VGFFIN (NOLOCK) FININNER JOIN TGFCAB (NOLOCK) CAB ON FIN.NUNOTA = CAB.NUNOTAINNER JOIN TGFPAR (NOLOCK) PAR ON FIN.CODPARC = PAR.CODPARCINNER JOIN TGFNAT (NOLOCK) NAT ON FIN.CODNAT = NAT.CODNATINNER JOIN TSICUS (NOLOCK) CUS ON FIN.CODCENCUS = CUS.CODCENCUSINNER JOIN TSIEMP (NOLOCK) EMP ON FIN.CODEMP = EMP.CODEMPINNER JOIN TSICID (NOLOCK) CID ON EMP.CODCID = CID.CODCIDINNER JOIN TSIUFS (NOLOCK) UFS ON CID.UF = UFS.CODUFINNER JOIN TSIUSU (NOLOCK) USU ON CAB.CODUSUINC = USU.CODUSUINNER JOIN TSIGRU (NOLOCK) GRU ON USU.CODGRUPO = GRU.CODGRUPOINNER JOIN TGFTOP (NOLOCK) OPE ON CAB.CODTIPOPER = OPE.CODTIPOPER AND CAB.DHTIPOPER = OPE.DHALTERLEFT JOIN TSILIB (NOLOCK) LIBFIS ON CAB.NUNOTA = LIBFIS.NUCHAVE AND LIBFIS.TABELA = 'TGFCAB'LEFT JOIN TSILIB (NOLOCK) LIBFIN ON FIN.NUFIN = LIBFIN.NUCHAVE AND LIBFIN.TABELA = 'TGFFIN'LEFT JOIN TGFVAR (NOLOCK) VAR ON CAB.NUNOTA = VAR.NUNOTALEFT JOIN TGFCAB PEDIDO ON PEDIDO.NUNOTA = VAR.NUNOTAORIGLEFT JOIN TSIUSU U2 ON U2.CODUSU = PEDIDO.CODUSUINCWHERE((:A_TIPOPER = 'SLP' AND FIN.CODTIPOPER IN (2145, 3269))OR (:A_TIPOPER = 'SEA' AND FIN.CODTIPOPER IN (2002,2102))        OR (:A_TIPOPER = 'PLP' AND FIN.CODTIPOPER IN (3265,3264,3273,3268,3292,2149)) OR (:A_TIPOPER = 'PEA' AND FIN.CODTIPOPER IN (2001,2003,2008))        OR :A_TIPOPER IS NULL AND FIN.CODTIPOPER IN (2002, 2145, 3269, 2102,2001, 2003, 2008, 3265, 3264, 3273, 3268, 3292, 2149)        )AND FIN.RECDESP = -1AND ((:A_GRUEMP = 'LP' AND FIN.CODEMP >= 100)OR (:A_GRUEMP = 'EA' AND FIN.CODEMP <10 AND PEDIDO.CODUSUINC IS NOT NULL )OR :A_GRUEMP IS NULL)AND CAB.TIPMOV IN ('C','O')AND (CAB.CODUSUINC = :A_CODUSU OR :A_CODUSU IS NULL)AND CAB.DTENTSAI BETWEEN :P_DT.INI AND :P_DT.FINAND ((U2.CODGRUPO = 143) OR (USU.CODGRUPO = 143))AND ((CAB.CODUSUINC IN :P_CODUSU) OR (PEDIDO.CODUSUINC IN :P_CODUSU))GROUP BY FIN.NUFIN,CAB.CODTIPOPER, OPE.DESCROPER,CAB.DTNEG, FIN.DHMOV,PAR.CODPARC, PAR.NOMEPARC, FIN.NUMNOTA,FIN.CODNAT, NAT.DESCRNAT,FIN.CODCENCUS, CUS.DESCRCENCUS,FIN.CODEMP, EMP.NOMEFANTASIA,FIN.DTVENC,FIN.DTENTSAI,FIN.VLRDESC, FIN.VLRJURO,FIN.VLRLIQUIDO,FIN.VLRDESDOB,FIN.HISTORICO,UFS.DESCRICAO, CAB.NUNOTA,FIN.DTENTSAI,CAB.CODUSUINC,FIN.DHBAIXA,PEDIDO.NUNOTA,PEDIDO.CODUSUINC,DATEDIFF(DAY, FIN.DTNEG, FIN.DTVENC),CASE WHEN CAB.STATUSNOTA = 'L' THEN 'Sim' ELSE 'Não' END,CASE WHEN FIN.PROVISAO = 'S' THEN 'Provisão' ELSE 'Real' END,CASE 	WHEN (LIBFIS.EVENTO = 1007 AND LIBFIS.DHLIB IS NOT NULL) THEN 'Liberado'	WHEN (LIBFIS.EVENTO = 1007 AND LIBFIS.DHLIB IS NULL) THEN 'Pendente de liberação'	ELSE 'Liberação não solicitada'END,CASE 	WHEN (LIBFIN.EVENTO IN (24,44) AND LIBFIN.DHLIB IS NOT NULL) THEN 'Liberado'	WHEN (LIBFIN.NUCHAVE IS NULL) THEN 'Liberação não solicitada'	WHEN (LIBFIN.EVENTO IN (24,44) AND LIBFIN.DHLIB IS NULL) THEN 'Pendente de liberação'END ]]></expression>
+        <metadata>
+          <field name="NUFIN" label="Nro Unico" type="I" visible="true" useFooter="false"/>
+          <field name="CODTIPOPER" label="Cod. TOP" type="I" visible="true" useFooter="false"/>
+          <field name="DESCROPER" label="Descr. TOP" type="S" visible="true" useFooter="false"/>
+          <field name="DTNEG" label="Dt. Negociação" type="D" visible="true" useFooter="false"/>
+          <field name="DHMOV" label="Dt. movimentação" type="D" visible="true" useFooter="false"/>
+          <field name="CODPARC" label="Cod. Parceiro" type="I" visible="true" useFooter="false"/>
+          <field name="RAZAOSOCIALPAR" label="Razão Social" type="S" visible="true" useFooter="false"/>
+          <field name="NUMNOTA" label="Nro nota" type="I" visible="true" useFooter="false"/>
+          <field name="CODNAT" label="Cod. Natureza" type="I" visible="true" useFooter="false"/>
+          <field name="DESCRNAT" label="Descr. Natureza" type="S" visible="true" useFooter="false"/>
+          <field name="CODCENCUS" label="Cod. centro de resultado" type="I" visible="true" useFooter="false"/>
+          <field name="DESCRCENCUS" label="Descr. Centro de resultado" type="S" visible="true" useFooter="false"/>
+          <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+          <field name="NOMEFANTASIA" label="Nome fantasia" type="S" visible="true" useFooter="false"/>
+          <field name="DTVENC" label="Dt. Vencimento" type="D" visible="true" useFooter="false"/>
+          <field name="DTEMISSAO" label="Dt. Emissão" type="D" visible="true" useFooter="false"/>
+          <field name="VLRDESC" label="Vlr. Desconto" type="F" visible="true" useFooter="false"/>
+          <field name="VLRJURO" label="Vlr. Juros" type="F" visible="true" useFooter="false"/>
+          <field name="VLRLIQUIDO" label="Vlr. Liquido" type="I" visible="true" useFooter="false"/>
+          <field name="VLRDESDOB" label="Vlr. Desdobramento" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+          <field name="HISTORICO" label="Hostórico" type="S" visible="true" useFooter="false"/>
+          <field name="ESTADO" label="Estado" type="S" visible="true" useFooter="false"/>
+          <field name="NUNOTA" label="Nro Unico nota" type="I" visible="true" useFooter="false"/>
+          <field name="DTENTSAI" label="Dt. entrada" type="D" visible="true" useFooter="false"/>
+          <field name="CODUSUINC" label="Cod. Usuario Inclusão" type="I" visible="true" useFooter="false"/>
+          <field name="DHBAIXA" label="Data Baixa" type="D" visible="true" useFooter="false"/>
+          <field name="PEDIDO" label="Pedido" type="I" visible="true" useFooter="false"/>
+          <field name="USUPEDIDO" label="Usuario Pedido" type="I" visible="true" useFooter="false"/>
+          <field name="DIAS" label="Dias" type="I" visible="true" useFooter="false"/>
+          <field name="PONDERADA" label="PONDERADA" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+          <field name="CONFIRMADA" label="Confirmada ?" type="S" visible="true" useFooter="false"/>
+          <field name="PROVISAO" label="Provisão ?" type="S" visible="true" useFooter="false"/>
+          <field name="LIBERACAOFISCAL" label="Liberação fiscal ?" type="S" visible="true" useFooter="false"/>
+          <field name="LIBERACAODIRFIN" label="Liberação financeiro ?" type="S" visible="true" useFooter="false"/>
+        </metadata>
+      </grid>
+    </container>
+  </level>
+</gadget>

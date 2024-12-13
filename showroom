@@ -1,0 +1,193 @@
+<gadget refresh-time="120000">
+  <prompt-parameters>
+    <parameter id="DTINI" description="Dt. Inicial" metadata="date" required="true" keep-last="true" keep-date="false" order="0"/>
+    <parameter id="DTFIN" description="Dt. Final" metadata="date" required="true" keep-last="true" keep-date="false" order="1"/>
+    <parameter id="P_GRUPO" description="Grupo" metadata="singleList:Text" listType="text" required="false" keep-last="true" keep-date="false" order="2">
+      <item value="S" label="SAPATOS"/>
+      <item value="B" label="BOLSA"/>
+      <item value="A" label="ACESSÓRIOS"/>
+      <item value="T" label="TODOS"/>
+    </parameter>
+  </prompt-parameters>
+  <level id="lvl_jxq4k7" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="50">
+        <container orientacao="H" tamanhoRelativo="50">
+          <container orientacao="V" tamanhoRelativo="750">
+            <chart id="cht_jxq4k8" type="gauge">
+              <title><![CDATA[Showroom]]></title>
+              <expression type="sql" data-source="MGEDS"><![CDATA[select SUM(VLRNOTA) VLRNOTA, 6000000 VLRMETA from tgfcab where codtipoper IN (3124) and dtneg >= :DTINI AND dtneg <= :DTFIN]]></expression>
+              <metadata>
+                <field name="VLRNOTA" label="VLRNOTA" type="F" visible="true" useFooter="false"/>
+                <field name="VLRMETA" label="VLRMETA" type="F" visible="true" useFooter="false"/>
+              </metadata>
+              <show-ticks>true</show-ticks>
+              <min-value>0</min-value>
+              <max-value>6000000</max-value>
+              <value-field>VLRNOTA</value-field>
+              <alert-colors values="0,4500000,5500000,6000000" colors="0xff0000,0xffff00,0xff00"/>
+            </chart>
+          </container>
+        </container>
+        <container orientacao="V" tamanhoRelativo="50">
+          <chart id="cht_jxq4lj" type="gauge">
+            <title><![CDATA[Pronta Entrega]]></title>
+            <expression type="sql" data-source="MGEDS"><![CDATA[select SUM(VLRNOTA) VLRNOTA, 9000000 VLRMETA from tgfcab where codtipoper = 3111 and dtneg >= :DTINI AND dtneg <= :DTFIN]]></expression>
+            <metadata>
+              <field name="VLRNOTA" label="VLRNOTA" type="F" visible="true" useFooter="false"/>
+              <field name="VLRMETA" label="VLRMETA" type="F" visible="true" useFooter="false"/>
+            </metadata>
+            <show-ticks>false</show-ticks>
+            <min-value>0</min-value>
+            <max-value>500000</max-value>
+            <value-field>VLRNOTA</value-field>
+            <alert-colors values="0,350000,450000,500000" colors="0xff0000,0xffff00,0xff00"/>
+          </chart>
+        </container>
+      </container>
+      <container orientacao="H" tamanhoRelativo="50">
+        <container orientacao="V" tamanhoRelativo="50">
+          <container orientacao="V" tamanhoRelativo="750">
+            <grid id="grd_j18zgw" useNewGrid="S">
+              <title><![CDATA[Showroom]]></title>
+              <expression type="sql" data-source="MGEDS"><![CDATA[SELECT TGFCAB.CODVEND, TGFVEN.APELIDO, SUM(TGFCAB.VLRNOTA) VLRNOTA,COUNT(DISTINCT TGFCAB.CODPARC) QTDPARCATEND,SUM(TGFCAB.VLRNOTA) / COUNT(DISTINCT TGFCAB.CODPARC) TKMEDIOFROM TGFCAB INNER JOIN TGFVEN ON TGFVEN.CODVEND = TGFCAB.CODVENDWHERE TGFCAB.DTNEG >= :DTINI AND TGFCAB.DTNEG <= :DTFINAND TGFCAB.CODTIPOPER IN (3124)GROUP BY TGFCAB.CODVEND, TGFVEN.APELIDO]]></expression>
+              <metadata>
+                <field name="CODVEND" label="Código" type="I" visible="true" useFooter="false"/>
+                <field name="APELIDO" label="Apelido" type="S" visible="true" useFooter="false"/>
+                <field name="VLRNOTA" label="Vlr. Total" type="F" visible="true" useFooter="SUM"/>
+                <field name="QTDPARCATEND" label="Qtd. Parceiros" type="I" visible="true" useFooter="SUM"/>
+                <field name="TKMEDIO" label="Ticket Médio" type="F" visible="true" useFooter="PER">
+                  <aggregates per="PER">
+                    <text><![CDATA[ ]]></text>
+                    <personalized><![CDATA[SUM($VLRNOTA)/SUM($QTDPARCATEND)]]></personalized>
+                  </aggregates>
+                </field>
+              </metadata>
+            </grid>
+          </container>
+          <container orientacao="V" tamanhoRelativo="100">
+            <simple-value id="svl_n40uwg">
+              <value-expression><![CDATA[<div style='text-align:'><span style='color: #0033FF;'><b><u>Itens</u></b></span></div>]]></value-expression>
+              <on-click navigate-to="lvl_n40uw8">
+                <param id="A_CODGRU"/>
+              </on-click>
+            </simple-value>
+          </container>
+        </container>
+        <container orientacao="V" tamanhoRelativo="50">
+          <container orientacao="V" tamanhoRelativo="724">
+            <grid id="grd_j18zis" useNewGrid="S">
+              <title><![CDATA[Pronta Entrega]]></title>
+              <expression type="sql" data-source="MGEDS"><![CDATA[SELECT TGFCAB.CODVEND, TGFVEN.APELIDO, SUM(TGFCAB.VLRNOTA) VLRNOTA,COUNT(DISTINCT TGFCAB.CODPARC) QTDPARCATEND,SUM(TGFCAB.VLRNOTA) / COUNT(DISTINCT TGFCAB.CODPARC) TKMEDIOFROM TGFCAB INNER JOIN TGFVEN ON TGFVEN.CODVEND = TGFCAB.CODVENDWHERE TGFCAB.DTNEG >= :DTINI AND TGFCAB.DTNEG <= :DTFINAND TGFCAB.CODTIPOPER = 3111GROUP BY TGFCAB.CODVEND, TGFVEN.APELIDO]]></expression>
+              <metadata>
+                <field name="CODVEND" label="Código" type="I" visible="true" useFooter="false"/>
+                <field name="APELIDO" label="Apelido" type="S" visible="true" useFooter="false"/>
+                <field name="VLRNOTA" label="Vlr. Total" type="F" visible="true" useFooter="SUM"/>
+                <field name="QTDPARCATEND" label="Qtd. Parceiros" type="I" visible="true" useFooter="SUM"/>
+                <field name="TKMEDIO" label="Ticket Médio" type="F" visible="true" useFooter="PER">
+                  <aggregates per="PER">
+                    <text><![CDATA[ ]]></text>
+                    <personalized><![CDATA[SUM($VLRNOTA)/SUM($QTDPARCATEND)]]></personalized>
+                  </aggregates>
+                </field>
+              </metadata>
+            </grid>
+          </container>
+          <container orientacao="V" tamanhoRelativo="100">
+            <simple-value id="svl_mc8sfh">
+              <value-expression><![CDATA[<div style='text-align:'><span style='color: #0033FF;'><b><u>Parceiro</u></b></span></div>]]></value-expression>
+              <on-click navigate-to="lvl_mc8seo"/>
+            </simple-value>
+          </container>
+        </container>
+      </container>
+    </container>
+  </level>
+  <level id="lvl_n40uw8" description="Itens">
+    <args>
+      <arg id="A_CODGRU" type="integer"/>
+    </args>
+    <container orientacao="V" tamanhoRelativo="100">
+      <grid id="grd_n40uw9" useNewGrid="S">
+        <expression type="sql" data-source="MGEDS"><![CDATA[ SELECT TGFITE.CODPROD AS CODIGO, TGFPRO.REFERENCIA AS REFERENCIA, SUM(TGFITE.QTDNEG) AS QUANTIDADE, TGFGRU.CODGRUPOPROD AS GRUPO_PRODUTO, TGFPRO.DESCRPROD AS DESCRICAO, TGFITE.CONTROLEFROM TGFITE INNER JOIN TGFCAB ON TGFCAB.NUNOTA = TGFITE.NUNOTAINNER JOIN TGFPRO ON TGFITE.CODPROD = TGFPRO.CODPROD INNER JOIN TGFGRU ON TGFPRO.CODGRUPOPROD = TGFGRU.CODGRUPOPROD WHERE TGFCAB.CODTIPOPER = 3124AND ((TGFPRO.CODGRUPOPROD / 100000 = 601 AND :P_GRUPO = 'S') OR(TGFPRO.CODGRUPOPROD / 100000 = 602 AND :P_GRUPO = 'B') OR(TGFPRO.CODGRUPOPROD / 100000 = 603 AND :P_GRUPO = 'A')OR (TGFPRO.CODGRUPOPROD/100000 IN (601,602,603) AND :P_GRUPO = 'T'))AND TGFCAB.DTNEG >= :DTINI AND TGFCAB.DTNEG <= :DTFINGROUP BY TGFITE.CODPROD, TGFPRO.REFERENCIA, TGFGRU.CODGRUPOPROD, TGFPRO.DESCRPROD, TGFITE.CONTROLEORDER BY 1,5,6]]></expression>
+        <metadata>
+          <field name="CODIGO" label="Codigo" type="I" visible="true" useFooter="false"/>
+          <field name="REFERENCIA" label="Referencia" type="S" visible="true" useFooter="false"/>
+          <field name="QUANTIDADE" label="Quantidade" type="I" visible="true" useFooter="false"/>
+          <field name="GRUPO_PRODUTO" label="Grupo" type="I" visible="true" useFooter="false"/>
+          <field name="DESCRICAO" label="Descrição" type="S" visible="true" useFooter="false"/>
+          <field name="CONTROLE" label="Controle" type="S" visible="true" useFooter="false"/>
+        </metadata>
+        <on-click navigate-to="lvl_oerx96">
+          <param id="P_VEND">$CODIGO</param>
+        </on-click>
+      </grid>
+    </container>
+  </level>
+  <level id="lvl_oerx96" description="item">
+    <args>
+      <arg id="P_VEND" type="integer"/>
+    </args>
+    <container orientacao="H" tamanhoRelativo="100">
+      <container orientacao="V" tamanhoRelativo="50">
+        <grid id="grd_oeryad" useNewGrid="S">
+          <title><![CDATA[Quantidade Vendida Por Vendedor]]></title>
+          <expression type="sql" data-source="MGEDS"><![CDATA[SELECT TGFVEN.APELIDO,COUNT(TGFITE.CODPROD) AS QUANTIDADEFROM TGFCABINNER JOIN TGFITE ON TGFITE.NUNOTA = TGFCAB.NUNOTAINNER JOIN TGFPRO ON TGFITE.CODPROD = TGFPRO.CODPRODINNER JOIN TGFVEN ON TGFVEN.CODVEND = TGFCAB.CODVENDWHERE TGFCAB.DTNEG >= :DTINI AND TGFCAB.DTNEG <= :DTFINAND TGFCAB.CODTIPOPER IN (3124)AND TGFITE.CODPROD = :P_VENDGROUP BY TGFVEN.APELIDO,TGFITE.CODPROD]]></expression>
+          <metadata>
+            <field name="APELIDO" label="Vendedor" type="S" visible="true" useFooter="false"/>
+            <field name="QUANTIDADE" label="Quantidade" type="I" visible="true" useFooter="SUM"/>
+          </metadata>
+        </grid>
+      </container>
+      <container orientacao="V" tamanhoRelativo="50">
+        <grid id="grd_oerya9" useNewGrid="S">
+          <title><![CDATA[Quantidade Adquirida por cliente]]></title>
+          <expression type="sql" data-source="MGEDS"><![CDATA[SELECT TGFCAB.CODPARC,TGFPAR.NOMEPARC,COUNT(TGFITE.CODPROD) AS QUANTIDADEFROM TGFCABINNER JOIN TGFITE ON TGFITE.NUNOTA = TGFCAB.NUNOTAINNER JOIN TGFPRO ON TGFITE.CODPROD = TGFPRO.CODPRODINNER JOIN TGFVEN ON TGFVEN.CODVEND = TGFCAB.CODVENDINNER JOIN TGFPAR ON TGFCAB.CODPARC = TGFPAR.CODPARCWHERE TGFCAB.DTNEG >= :DTINI AND TGFCAB.DTNEG <= :DTFINAND TGFCAB.CODTIPOPER IN (3124)AND TGFITE.CODPROD = :P_VENDGROUP BY TGFCAB.CODPARC,TGFPAR.NOMEPARC,TGFITE.CODPROD]]></expression>
+          <metadata>
+            <field name="CODPARC" label="Código" type="I" visible="true" useFooter="false"/>
+            <field name="NOMEPARC" label="Nome" type="S" visible="true" useFooter="false"/>
+            <field name="QUANTIDADE" label="Quantidade" type="I" visible="true" useFooter="SUM"/>
+          </metadata>
+        </grid>
+      </container>
+    </container>
+  </level>
+  <level id="lvl_mc8seo" description="Cliente">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="100">
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_mc8sep">
+            <value-expression><![CDATA[<div style='text-align: center;'><td width=25%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_mc8seq">
+            <value-expression><![CDATA[<br><br><div style='text-align: center;'><span style='font-size: 40px; color: #4D3522;'>Acompanhamento Produto/Cliente</span></div></br></br>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_mc8ser">
+            <value-expression><![CDATA[<br><div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div></br>]]></value-expression>
+          </simple-value>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="319">
+        <grid id="grd_mc8ses" useNewGrid="S">
+          <expression type="sql" data-source="MGEDS"><![CDATA[ SELECT TGFCAB.NUNOTA, TGFPAR.CODPARC, TGFPAR.NOMEPARC, TGFCAB.CODTIPVENDA, TGFPRO.CODPROD, TGFPRO.REFERENCIA AS REFERENCIA, TGFPRO.DESCRPROD AS DESCRICAO, TGFITE.CONTROLE,  SUM(TGFITE.QTDNEG) AS QUANTIDADE,  CASE WHEN TGFPRO.CODGRUPOPROD / 100000 = 601 THEN 'SAPATOS' WHEN TGFPRO.CODGRUPOPROD / 100000 = 602 THEN 'BOLSAS' WHEN TGFPRO.CODGRUPOPROD / 100000 = 603 THEN 'ACESSORIOS' ELSE 'OUTROS' END AS GRUPOPRODUTOFROM TGFITE INNER JOIN TGFCAB ON TGFCAB.NUNOTA = TGFITE.NUNOTAINNER JOIN TGFPAR ON TGFPAR.CODPARC = TGFCAB.CODPARC INNER JOIN TGFPRO ON TGFITE.CODPROD = TGFPRO.CODPROD INNER JOIN TGFGRU ON TGFPRO.CODGRUPOPROD = TGFGRU.CODGRUPOPROD WHERE TGFCAB.CODTIPOPER = 3124AND TGFCAB.DTNEG >= :DTINI AND TGFCAB.DTNEG <= :DTFINGROUP BY TGFITE.CODPROD, TGFPRO.REFERENCIA, TGFGRU.CODGRUPOPROD, TGFPRO.DESCRPROD, TGFITE.CONTROLE,TGFPAR.CODPARC, TGFPAR.NOMEPARC, TGFCAB.CODTIPVENDA,TGFCAB.NUNOTA,TGFPRO.CODPROD,TGFPRO.CODGRUPOPRODORDER BY 1,5,6]]></expression>
+          <metadata>
+            <field name="NUNOTA" label="Nº Unico" type="I" visible="true" useFooter="false"/>
+            <field name="CODPARC" label="Cod. Parceiro" type="I" visible="true" useFooter="false"/>
+            <field name="NOMEPARC" label="Parceiro" type="S" visible="true" useFooter="false"/>
+            <field name="CODTIPVENDA" label="Cod Tipo Titulo" type="I" visible="true" useFooter="false"/>
+            <field name="CODPROD" label="Cod. Produto" type="I" visible="true" useFooter="false"/>
+            <field name="REFERENCIA" label="Referencia" type="S" visible="true" useFooter="false"/>
+            <field name="DESCRICAO" label="Descr. Produto" type="S" visible="true" useFooter="false"/>
+            <field name="CONTROLE" label="Controle" type="S" visible="true" useFooter="false"/>
+            <field name="QUANTIDADE" label="Quantidade" type="I" visible="true" useFooter="SUM"/>
+            <field name="GRUPOPRODUTO" label="Grupo Produto" type="S" visible="true" useFooter="false"/>
+          </metadata>
+        </grid>
+      </container>
+    </container>
+  </level>
+</gadget>

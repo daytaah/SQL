@@ -1,0 +1,113 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="CODEMP" description="Empresa" metadata="entity:Empresa@CODEMP" required="true" keep-last="true" keep-date="false" order="0"/>
+    <parameter id="P_DT" description="Data movimentos" metadata="datePeriod" required="true" keep-last="false" keep-date="false" order="1"/>
+  </prompt-parameters>
+  <level id="lvl_rat4xx" description="Principal">
+    <container orientacao="H" tamanhoRelativo="100">
+      <container orientacao="V" tamanhoRelativo="50">
+        <container orientacao="H" tamanhoRelativo="100">
+          <container orientacao="H" tamanhoRelativo="327">
+            <container orientacao="V" tamanhoRelativo="50">
+              <simple-value id="svl_sjjexl">
+                <args>
+                  <arg id="NUNOTA" type="integer"/>
+                  <arg id="ALIQICMS" type="integer"/>
+                  <arg id="VLRICMS" type="decimal"/>
+                  <arg id="BASEICMA" type="decimal"/>
+                  <arg id="DATA" type="date"/>
+                </args>
+                <value-expression><![CDATA[<div style='text-align: center;'><td width=40%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+              </simple-value>
+            </container>
+            <container orientacao="V" tamanhoRelativo="50">
+              <simple-value id="svl_sjjexm">
+                <args>
+                  <arg id="NUNOTA" type="integer"/>
+                  <arg id="ALIQICMS" type="integer"/>
+                  <arg id="VLRICMS" type="decimal"/>
+                  <arg id="BASEICMA" type="decimal"/>
+                  <arg id="DATA" type="date"/>
+                </args>
+                <value-expression><![CDATA[<div style='text-align: center;'><span style='font-size: 33px; color: #4D3522;'>LIVRO FISCAL</span></div>]]></value-expression>
+              </simple-value>
+            </container>
+          </container>
+          <container orientacao="V" tamanhoRelativo="162">
+            <simple-value id="svl_sjjexn">
+              <args>
+                <arg id="NUNOTA" type="integer"/>
+                <arg id="ALIQICMS" type="integer"/>
+                <arg id="VLRICMS" type="decimal"/>
+                <arg id="BASEICMA" type="decimal"/>
+                <arg id="DATA" type="date"/>
+              </args>
+              <value-expression><![CDATA[<div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div>]]></value-expression>
+            </simple-value>
+          </container>
+        </container>
+        <container orientacao="H" tamanhoRelativo="600">
+          <container orientacao="V" tamanhoRelativo="50">
+            <container orientacao="V" tamanhoRelativo="50">
+              <grid id="grd_sjjexh" useNewGrid="S">
+                <args>
+                  <arg id="NUNOTA" type="integer"/>
+                  <arg id="ALIQICMS" type="integer"/>
+                  <arg id="VLRICMS" type="decimal"/>
+                  <arg id="BASEICMA" type="decimal"/>
+                  <arg id="DATA" type="date"/>
+                </args>
+                <expression type="sql" data-source="MGEDS"><![CDATA[SELECT    CODEMP, (CASE WHEN CODCFO <=4000 THEN 'ENTRADA'WHEN CODCFO >=4000 THEN 'SAÍDA'END) AS 'SENTIDO' , CODCFO, ALIQICMS , SUM(BASEICMS) AS BASEICMS , SUM(VLRICMS) AS VLRICMSTOT, SUM(VLRCTB) AS VLRCTB , SUM(TGFLIV.ISENTASICMS) AS ISENTASICMS, SUM(TGFLIV.OUTRASICMS) AS OUTRASICMSFROM TGFLIVWHERE CODEMP = :CODEMPAND DHMOV BETWEEN :P_DT.INI AND :P_DT.FINGROUP BY CODEMP,ALIQICMS,CODCFOORDER BY CODCFO]]></expression>
+                <metadata>
+                  <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+                  <field name="SENTIDO" label="SENTIDO" type="S" visible="true" useFooter="false"/>
+                  <field name="CODCFO" label="CFOP" type="I" visible="true" useFooter="false"/>
+                  <field name="ALIQICMS" label="Aliquota ICMS" type="I" visible="true" useFooter="false"/>
+                  <field name="BASEICMS" label="Base ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRICMSTOT" label="Valor ICMS Total" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRCTB" label="Valor Contábil" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="ISENTASICMS" label="ISENTASICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="OUTRASICMS" label="OUTRASICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                </metadata>
+                <on-click navigate-to="lvl_rat4xx"/>
+                <refresh-details ui-list="grd_sjje6d">
+                  <param id="A_CODCFO">$CODCFO</param>
+                </refresh-details>
+              </grid>
+            </container>
+            <container orientacao="V" tamanhoRelativo="50">
+              <grid id="grd_sjje6d" useNewGrid="S">
+                <args>
+                  <arg id="A_CODCFO" type="integer"/>
+                </args>
+                <expression type="sql" data-source="MGEDS"><![CDATA[SELECT       TGFLIV.NUNOTA     , TGFLIV.ORIGEM     , TGFLIV.ALIQICMS     , TGFLIV.CODCFO     , TGFCFO.DESCRCFO      , TGFLIV.CODEMP     , TGFLIV.NUMNOTA     , TGFLIV.DTDOC     , TGFLIV.DHMOV     , TGFLIV.EMPPARC     , TGFLIV.UFORIGEM     , TGFLIV.UFDESTINO     , SUM(TGFLIV.BASEICMS) AS BASEICMS     , SUM(TGFLIV.ISENTASICMS) AS ISENTASICMS     , SUM(TGFLIV.OUTRASICMS) AS OUTRASICMS     , SUM(TGFLIV.VLRCTB) AS VLRCTB     , SUM(TGFLIV.VLRICMS)AS VLRICMSFROM TGFLIVINNER JOIN TGFCFO ON TGFCFO.CODCFO = TGFLIV.CODCFO WHERE TGFLIV.CODEMP = :CODEMP AND TGFLIV.DHMOV BETWEEN :P_DT.INI AND :P_DT.FINAND TGFLIV.CODCFO = :A_CODCFOGROUP BY TGFLIV.NUNOTA     , TGFLIV.ORIGEM     , TGFLIV.ALIQICMS     , TGFLIV.CODCFO     , TGFCFO.DESCRCFO      , TGFLIV.CODEMP     , TGFLIV.NUMNOTA     , TGFLIV.DTDOC     , TGFLIV.DHMOV     , TGFLIV.EMPPARC     , TGFLIV.UFORIGEM     , TGFLIV.UFDESTINO]]></expression>
+                <metadata>
+                  <field name="NUNOTA" label="Número Único" type="I" visible="true" useFooter="false"/>
+                  <field name="ORIGEM" label="ORIGEM" type="S" visible="true" useFooter="false"/>
+                  <field name="ALIQICMS" label="Aliquota ICMS" type="I" visible="true" useFooter="false"/>
+                  <field name="CODCFO" label="CFOP" type="I" visible="true" useFooter="false"/>
+                  <field name="DESCRCFO" label="Descr. CFOP" type="S" visible="true" useFooter="false"/>
+                  <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+                  <field name="NUMNOTA" label="Número Nota" type="I" visible="true" useFooter="false"/>
+                  <field name="DTDOC" label="Data Documento" type="S" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+                  <field name="DHMOV" label="Data Movimento" type="S" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+                  <field name="EMPPARC" label="Destino" type="S" visible="true" useFooter="false"/>
+                  <field name="UFORIGEM" label="UF Origem" type="S" visible="true" useFooter="false"/>
+                  <field name="UFDESTINO" label="UF Destino" type="S" visible="true" useFooter="false"/>
+                  <field name="BASEICMS" label="Base ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="ISENTASICMS" label="Isentas de ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="OUTRASICMS" label="Outras ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRCTB" label="Valor Contábil" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRICMS" label="Valor ICMS" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                </metadata>
+                <on-click-launcher resource-id="br.com.sankhya.com.mov.CentralNotas">
+                  <NUNOTA>$NUNOTA</NUNOTA>
+                </on-click-launcher>
+              </grid>
+            </container>
+          </container>
+        </container>
+      </container>
+    </container>
+  </level>
+</gadget>

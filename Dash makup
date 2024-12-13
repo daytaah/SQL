@@ -1,0 +1,57 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="PER" description="Data saída" metadata="datePeriod" required="true" keep-last="false" keep-date="false" order="0"/>
+    <parameter id="OPERACAO" description="TOP" metadata="multiList:Text" listType="sql" required="true" keep-last="true" keep-date="false" order="1">
+      <expression type="SQL"><![CDATA[SELECT      DISTINCT CODTIPOPER as VALUE,      DESCROPER AS LABELFROM       tgftopWHERE      CODTIPOPER IN (3100, 3105, 3115)]]></expression>
+    </parameter>
+  </prompt-parameters>
+  <level id="lvl_j8vsm6" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="100">
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_j8vsm8">
+            <value-expression><![CDATA[<div style='text-align: center;'><td width=25%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_j8vsm9">
+            <value-expression><![CDATA[<br><br><div style='text-align: center;'><span style='font-size: 42px; color: #4D3522;'>Markup</span></div></br></br>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_j8vsna">
+            <value-expression><![CDATA[<br><div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div></br>]]></value-expression>
+          </simple-value>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="537">
+        <grid id="grd_j8vsm7" useNewGrid="S">
+          <expression type="sql" data-source="MGEDS"><![CDATA[WITH PRECOTAB AS (      SELECT            TGFTAB.CODTAB,            TGFEXC.CODPROD,            TGFEXC.VLRVENDA      FROM            TGFTAB      INNER JOIN TGFEXC ON            TGFEXC.NUTAB = TGFTAB.NUTAB      WHERE            TGFTAB.DTVIGOR = (                  SELECT                        MAX(TAB.DTVIGOR)                  FROM                        TGFTAB TAB                  INNER JOIN TGFEXC EXC ON                        EXC.NUTAB = TAB.NUTAB                  WHERE                        EXC.CODPROD = TGFEXC.CODPROD                        AND TAB.CODTAB = TGFTAB.CODTAB                        AND TAB.DTVIGOR <= CONVERT(                              DATE,                              GETDATE()                        )            )            AND TGFTAB.CODTAB = 104)SELECT      TGFCAB.CODEMP,      CASE             WHEN TGFCAB.CODTIPOPER = 3100 THEN 'PED. VENDA REPOSIÇÃO LOJAS / CDA'            WHEN TGFCAB.CODTIPOPER = 3105 THEN 'PED. VENDA LOJISTA POR ENCOMENDA'            WHEN TGFCAB.CODTIPOPER = 3115 THEN 'PED. VENDA CLOSET INFINITO'      END AS OPERACAO ,      TGFCAB.DTNEG AS DATA_PEDIDO,      TGFCAB.NUNOTA,      TGFCAB.PENDENTE,      VEN.NUMNOTA AS NOTA_VENDA,      ISNULL(            CONVERT(                  VARCHAR(10),                  VEN.DTNEG,                  103            ),            0      ) AS DATA_VENDA,      TGFPAR.CODPARC,      TGFCAB.CODTIPOPER,      AD_TGFLOJA.CODLOJA,      AD_TGFLOJA.NOME,      TGFTPP.DESCRTIPPARC,      TGFNTA.CODTAB,      TGFNTA.NOMETAB,      TGFCAB.NUMNOTA,      TGFPRO.CODPROD,      TGFPRO.DESCRPROD,      GRU2.DESCRGRUPOPROD,      TGFPRO.REFERENCIA,      TGFITE.VLRUNIT,      PRECOTAB.VLRVENDAFROM      TGFCAB(NOLOCK)INNER JOIN TGFITE(NOLOCK) ON      TGFITE.NUNOTA = TGFCAB.NUNOTAINNER JOIN TGFPRO(NOLOCK) ON      TGFPRO.CODPROD = TGFITE.CODPRODINNER JOIN TGFPAR(NOLOCK) ON      TGFPAR.CODPARC = TGFCAB.CODPARCLEFT JOIN TGFTPP(NOLOCK) ON      TGFPAR.CODTIPPARC = TGFTPP.CODTIPPARCLEFT JOIN AD_TGFLOJA(NOLOCK) ON      AD_TGFLOJA.CODPARC = TGFPAR.CODPARCLEFT JOIN PRECOTAB ON      PRECOTAB.CODPROD = TGFITE.CODPRODINNER JOIN TGFTAB(NOLOCK) ON      TGFTAB.NUTAB = TGFITE.NUTABINNER JOIN TGFNTA (NOLOCK) ON      TGFNTA.CODTAB = TGFTAB.CODTABLEFT JOIN TGFVAR(NOLOCK) VAR ON      VAR.NUNOTAORIG = TGFCAB.NUNOTA      AND VAR.SEQUENCIAORIG = TGFITE.SEQUENCIALEFT JOIN TGFCAB(NOLOCK) VEN ON      VEN.NUNOTA = VAR.NUNOTAINNER JOIN TGFGRU GRU4(NOLOCK) ON      TGFPRO.CODGRUPOPROD = GRU4.CODGRUPOPRODINNER JOIN TGFGRU GRU3 (NOLOCK) ON      GRU3.CODGRUPOPROD = GRU4.CODGRUPAIINNER JOIN TGFGRU GRU2 (NOLOCK) ON      GRU2.CODGRUPOPROD = GRU3.CODGRUPAIWHERE      TGFCAB.CODTIPOPER IN :OPERACAO      AND VEN.DTENTSAI BETWEEN :PER.INI AND :PER.FIN      AND TGFCAB.STATUSNOTA = 'L'ORDER BY      TGFPRO.CODPROD]]></expression>
+          <metadata>
+            <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+            <field name="OPERACAO" label="OPERACAO" type="S" visible="true" useFooter="false"/>
+            <field name="DATA_PEDIDO" label="Data Pedido" type="D" visible="true" useFooter="false"/>
+            <field name="NUNOTA" label="Nro. Unico" type="I" visible="true" useFooter="false"/>
+            <field name="PENDENTE" label="Pendente" type="S" visible="true" useFooter="false"/>
+            <field name="NOTA_VENDA" label="Nota Venda" type="I" visible="true" useFooter="false"/>
+            <field name="DATA_VENDA" label="Data Venda" type="S" visible="true" useFooter="false"/>
+            <field name="CODPARC" label="Parceiro" type="I" visible="true" useFooter="false"/>
+            <field name="CODTIPOPER" label="TOP" type="I" visible="true" useFooter="false"/>
+            <field name="CODLOJA" label="Loja" type="I" visible="true" useFooter="false"/>
+            <field name="NOME" label="Nome" type="S" visible="true" useFooter="false"/>
+            <field name="DESCRTIPPARC" label="Tipo Parceiro" type="S" visible="true" useFooter="false"/>
+            <field name="CODTAB" label="Codigo Tabela Preço" type="I" visible="true" useFooter="false"/>
+            <field name="NOMETAB" label="Nome Tabela Preço" type="S" visible="true" useFooter="false"/>
+            <field name="NUMNOTA" label="Nro. Nota" type="I" visible="true" useFooter="false"/>
+            <field name="CODPROD" label="Produto" type="I" visible="true" useFooter="false"/>
+            <field name="DESCRPROD" label="Descrição" type="S" visible="true" useFooter="false"/>
+            <field name="DESCRGRUPOPROD" label="Grupo" type="S" visible="true" useFooter="false"/>
+            <field name="REFERENCIA" label="Referencia" type="S" visible="true" useFooter="false"/>
+            <field name="VLRUNIT" label="Vlr. Unitário" type="I" visible="true" useFooter="false"/>
+            <field name="VLRVENDA" label="Vlr. Venda " type="I" visible="true" useFooter="false"/>
+          </metadata>
+        </grid>
+      </container>
+    </container>
+  </level>
+</gadget>

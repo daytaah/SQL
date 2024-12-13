@@ -1,0 +1,33 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="P_TIPOLOJA" description="Tipo de Loja" metadata="multiList:Text" listType="text" required="true" keep-last="true" keep-date="false" order="0">
+      <item value="S" label="Lojas Próprias"/>
+      <item value="N" label="Lojas Franqueadas"/>
+    </parameter>
+    <parameter id="P_DTINI" description="Venc. Inicial" metadata="date" required="true" keep-last="false" keep-date="true" order="1"/>
+    <parameter id="P_DTFIN" description="Venc. Final" metadata="date" required="true" keep-last="false" keep-date="true" order="2"/>
+  </prompt-parameters>
+  <level id="lvl_aynyy73" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <grid id="grd_aynyy74" useNewGrid="S">
+        <expression type="sql" data-source="MGEDS"><![CDATA[SELECTLOJA.CODLOJA,FIN.CODPARC,FIN.CODEMP,EMP.NOMEFANTASIA, PAR.NOMEPARC,FIN.NUFIN,FIN.NUMNOTA,FIN.VLRLIQUIDO,FIN.CARTAODESC,FIN.VLRDESDOB,FIN.DTNEG,FIN.DTVENC,NAT.CODNAT,NAT.DESCRNATFROM VGFFIN FIN (NOLOCK)INNER JOIN AD_TGFLOJA LOJA ON LOJA.CODEMP = FIN.CODEMPINNER JOIN TGFNAT NAT ON NAT.CODNAT =FIN.CODNATINNER JOIN TSIEMP EMP ON EMP.CODEMP =FIN.CODEMP INNER JOIN TGFPAR PAR ON PAR.CODPARC =FIN.CODPARC AND DHBAIXA IS NULLAND LOJA.LOJAPROPRIA  IN :P_TIPOLOJAAND PROVISAO = 'N'AND FIN.DTVENC BETWEEN :P_DTINI AND :P_DTFINORDER BY LOJA.CODLOJA]]></expression>
+        <metadata>
+          <field name="CODLOJA" label="Loja" type="I" visible="true" useFooter="false"/>
+          <field name="CODPARC" label="Parceiro" type="I" visible="true" useFooter="false"/>
+          <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+          <field name="NOMEFANTASIA" label="Empresa/Loja" type="S" visible="true" useFooter="false"/>
+          <field name="NOMEPARC" label="Nome Parceiro" type="S" visible="true" useFooter="false"/>
+          <field name="NUFIN" label="Número Financeiro" type="I" visible="true" useFooter="false"/>
+          <field name="NUMNOTA" label="Numero da Nota" type="I" visible="true" useFooter="false"/>
+          <field name="VLRLIQUIDO" label="Valor Liquido" type="I" visible="true" useFooter="SUM" mask="R$ #.##0,00"/>
+          <field name="CARTAODESC" label="Taxa Administradora" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00"/>
+          <field name="VLRDESDOB" label="Valor Desdobramento" type="F" visible="true" useFooter="SUM" mask="R$ #.##0,00"/>
+          <field name="DTNEG" label="Data Negociação" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+          <field name="DTVENC" label="Data Vencimento" type="D" visible="true" useFooter="false" mask="DD/MM/YYYY"/>
+          <field name="CODNAT" label="Natureza" type="I" visible="true" useFooter="false"/>
+          <field name="DESCRNAT" label="Desc. Natureza" type="S" visible="true" useFooter="false"/>
+        </metadata>
+      </grid>
+    </container>
+  </level>
+</gadget>

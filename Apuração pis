@@ -1,0 +1,75 @@
+<gadget>
+  <prompt-parameters>
+    <parameter id="P_CODEMP" description="Empresa" metadata="multiList:Text" listType="sql" required="false" keep-last="true" keep-date="false" order="0">
+      <expression type="SQL"><![CDATA[SELECT CODEMP AS VALUE , NOMEFANTASIA AS LABELFROM TSIEMP WHERE CODEMP >= 100AND CODEMP NOT IN (102,107)]]></expression>
+    </parameter>
+    <parameter id="P_DT" description="Período" metadata="datePeriod" required="true" keep-last="true" keep-date="false" order="1"/>
+  </prompt-parameters>
+  <level id="lvl_qs52n2" description="Principal">
+    <container orientacao="V" tamanhoRelativo="100">
+      <container orientacao="H" tamanhoRelativo="100">
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_qs52n3">
+            <value-expression><![CDATA[<div style='text-align: center;'><td width=25%><img src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/constance-nova-marca.png" border="0" /></td></div>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_qs52n4">
+            <value-expression><![CDATA[<br><br><div style='text-align: center;'><span style='font-size: 25px; color: #4D3522;'>Apuração PIS/COFINS</span></div></br></br>]]></value-expression>
+          </simple-value>
+        </container>
+        <container orientacao="V" tamanhoRelativo="33">
+          <simple-value id="svl_qs52n5">
+            <value-expression><![CDATA[<br><div style='text-align: center;'><td width=20%><img width="181px" height="80px" src="http://imagensecommerce.s3-website-sa-east-1.amazonaws.com/CTC-DIGITAL.jpg" border="0" /></td></div></br>]]></value-expression>
+          </simple-value>
+        </container>
+      </container>
+      <container orientacao="V" tamanhoRelativo="300">
+        <container orientacao="H" tamanhoRelativo="50">
+          <container orientacao="V" tamanhoRelativo="50">
+            <container orientacao="V" tamanhoRelativo="50">
+              <grid id="grd_qs52q3" useNewGrid="S" tamTexto="12">
+                <title><![CDATA[<divstyle style='font-size: 25px';>Vendas</div>]]></title>
+                <expression type="sql" data-source="MGEDS"><![CDATA[SELECT CODEMP     , CODCFO     , SUM(VLRCTB) AS VLRCTB     , SUM(VLRICMS) AS VLRICMS     , (SUM(VLRCTB)-SUM(VLRICMS)) AS VLRFINALFROM TGFLIV WHERE DHMOV BETWEEN :P_DT.INI AND :P_DT.FINAND CODEMP IN :P_CODEMP AND CODCFO IN (5102,6108,6102)GROUP BY CODEMP, CODCFO]]></expression>
+                <metadata>
+                  <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+                  <field name="CODCFO" label="CFOP" type="I" visible="true" useFooter="false"/>
+                  <field name="VLRCTB" label="Base de Cálculo" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRICMS" label="ICMS Destacado" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRFINAL" label="Valor Final" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                </metadata>
+              </grid>
+            </container>
+            <container orientacao="V" tamanhoRelativo="50">
+              <grid id="grd_qs52q4" useNewGrid="S" tamTexto="12">
+                <title><![CDATA[<divstyle style='font-size: 25px';>Devoluções</div>]]></title>
+                <expression type="sql" data-source="MGEDS"><![CDATA[SELECT CODEMP     , CODCFO     , SUM(VLRCTB) AS VLRCTB     , SUM(VLRICMS) AS VLRICMS     , (SUM(VLRCTB)-SUM(VLRICMS)) AS VLRFINALFROM TGFLIV WHERE DHMOV BETWEEN :P_DT.INI AND :P_DT.FINAND CODEMP IN :P_CODEMP AND CODCFO IN (1202,2202)GROUP BY CODEMP, CODCFO]]></expression>
+                <metadata>
+                  <field name="CODEMP" label="Empresa" type="I" visible="true" useFooter="false"/>
+                  <field name="CODCFO" label="CFOP" type="I" visible="true" useFooter="false"/>
+                  <field name="VLRCTB" label="Base de Cálculo" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRICMS" label="ICMS Destacado" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                  <field name="VLRFINAL" label="Valor Final" type="F" visible="true" useFooter="SUM" mask="#.##0,00"/>
+                </metadata>
+              </grid>
+            </container>
+          </container>
+          <container orientacao="H" tamanhoRelativo="50">
+            <simple-value id="svl_qs52r1">
+              <expression type="sql" data-source="MGEDS"><![CDATA[WITH VENDAS AS (    SELECT           SUM(VLRCTB) AS VLRCTB,           SUM(VLRICMS) AS VLRICMS,           (SUM(VLRCTB) - SUM(VLRICMS)) AS VLRFINAL    FROM TGFLIV    WHERE DHMOV BETWEEN :P_DT.INI AND :P_DT.FIN      AND CODEMP IN :P_CODEMP      AND CODCFO IN (5102, 6108, 6102, 5405)),DEVOLUCAO AS (    SELECT           SUM(VLRCTB) AS VLRCTB,           SUM(VLRICMS) AS VLRICMS,           (SUM(VLRCTB) - SUM(VLRICMS)) AS VLRFINAL    FROM TGFLIV    WHERE DHMOV BETWEEN :P_DT.INI AND :P_DT.FIN      AND CODEMP IN :P_CODEMP      AND CODCFO IN (1202, 2202,1411,2411)     )SELECT ROUND(SUM(VENDAS.VLRCTB),2) AS RECEITA_BRUTA,       ROUND(SUM(VENDAS.VLRCTB) - SUM(VENDAS.VLRICMS),2) AS RECEITA_VENDAS,       ROUND(SUM(DEVOLUCAO.VLRCTB) - SUM(DEVOLUCAO.VLRICMS),2) AS RECEITA_DEVOLUCAO,       ROUND((SUM(VENDAS.VLRCTB) - SUM(VENDAS.VLRICMS)) - (SUM(DEVOLUCAO.VLRCTB) - SUM(DEVOLUCAO.VLRICMS)),2) AS BASE_LIQUIDA,       ROUND((SUM(VENDAS.VLRCTB) - SUM(VENDAS.VLRICMS)) - (SUM(DEVOLUCAO.VLRCTB) - SUM(DEVOLUCAO.VLRICMS)),2) * 0.0065 AS PIS,       ROUND((SUM(VENDAS.VLRCTB) - SUM(VENDAS.VLRICMS)) - (SUM(DEVOLUCAO.VLRCTB) - SUM(DEVOLUCAO.VLRICMS)),2) * 0.03 AS COFINSFROM VENDAS, DEVOLUCAO]]></expression>
+              <metadata>
+                <field name="RECEITA_BRUTA" label="RECEITA_BRUTA" type="F" visible="true" useFooter="false" mask="#.##0,00"/>
+                <field name="RECEITA_VENDAS" label="RECEITA_VENDAS" type="F" visible="true" useFooter="false" mask="#.##0,00"/>
+                <field name="RECEITA_DEVOLUCAO" label="RECEITA_DEVOLUCAO" type="F" visible="true" useFooter="false" mask="#.##0,00"/>
+                <field name="BASE_LIQUIDA" label="BASE_LIQUIDA" type="F" visible="true" useFooter="false" mask="#.##0,00"/>
+                <field name="PIS" label="PIS" type="F" visible="true" useFooter="false" mask="#.##0,00"/>
+                <field name="COFINS" label="COFINS" type="F" visible="true" useFooter="false" mask="#.##0,00"/>
+              </metadata>
+              <value-expression><![CDATA[<html><body><div class="texto"><div class="divClassbt2">Receita Bruta = $RECEITA_BRUTA</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }    @font-face {        font-family: ' Franklin Gothic';  }</style><html><body><div class="texto"><div class="divClassbt2">Receita Vendas = $RECEITA_VENDAS</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }    @font-face {        font-family: ' Franklin Gothic';  }</style><html><body><div class="texto"><div class="divClassbt2">Receita Devolução = $RECEITA_DEVOLUCAO</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }    @font-face {        font-family: ' Franklin Gothic';  }</style><html><body><div class="texto"><div class="divClassbt2">Base Liquida = $BASE_LIQUIDA</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }    @font-face {        font-family: ' Franklin Gothic';  }</style><html><body><div class="texto"><div class="divClassbt2">PIS = $PIS</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }    @font-face {        font-family: ' Franklin Gothic';  }</style><html><body><div class="texto"><div class="divClassbt2">COFINS = $COFINS</div></div></body></html><style>h1{  margin-left: 15%;	text-align: center;	vertical-align: center;	margin: 0 1.5%;	font-weight: bold;  padding: 40px 0;  text-decoration: underline;}.divClassbt2 {        text-align: center;	      width: auto;        height: auto;        margin-left: auto;        font-size: 3.0vh;        Font-family: Franklin Gothic, Arial Bold;        font-style: bold;        color: DarkSlateGray;        border: transparent;        background-color: DarkSlateGray;        border-radius: 10px 10px;        background: #c5cfc6;    }    @font-face {        font-family: ' Franklin Gothic';  }</style>]]></value-expression>
+            </simple-value>
+          </container>
+        </container>
+      </container>
+    </container>
+  </level>
+</gadget>
